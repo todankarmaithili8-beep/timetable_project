@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:timetable_project/core/utils.dart';
+import 'package:timetable_project/screens/home_screen.dart';
 
 void main() {
   final sunrise = DateTime(2026, 8, 20, 6, 21);
@@ -20,13 +21,6 @@ void main() {
 
   final avaddha = PaccakhanTimeUtils.calculateAvaddha(sunrise, dayLength);
 
-  print('Day Length: $dayLength');
-  print('Navkarshi: $navkarshi');
-  print('Porasi: $porasi');
-  print('Saddporasi: $saddporasi');
-  print('Purimaddha: $purimaddha');
-  print('Avaddha: $avaddha');
-
   runApp(const MyApp());
 }
 
@@ -35,6 +29,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(debugShowCheckedModeBanner: false, title: 'Paccakhan');
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Paccakhan',
+      home: HomeScreen(),
+    );
   }
 }
