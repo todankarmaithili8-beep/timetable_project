@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:timetable_project/core/utils.dart';
 import 'package:timetable_project/screens/home_screen.dart';
+import 'package:timetable_project/screens/main_screen.dart';
+import 'package:timetable_project/screens/splash_screen.dart';
+import 'package:timetable_project/screens/timetable_screen.dart';
 
 void main() {
   final sunrise = DateTime(2026, 8, 20, 6, 21);
@@ -32,7 +35,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Paccakhan',
-      home: HomeScreen(),
+      home: const MainScreen(),
     );
   }
 }

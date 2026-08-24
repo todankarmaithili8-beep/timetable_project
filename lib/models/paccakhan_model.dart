@@ -2,6 +2,7 @@ class PaccakhanModel {
   final String date;
   final String sunrise;
   final String sunset;
+  final String daylength;
   final String navkarshi;
   final String porsi;
   final String sadhporsi;
@@ -15,6 +16,7 @@ class PaccakhanModel {
     required this.date,
     required this.sunrise,
     required this.sunset,
+    required this.daylength,
     required this.navkarshi,
     required this.porsi,
     required this.sadhporsi,
@@ -30,6 +32,7 @@ class PaccakhanModel {
       'date': date,
       'sunrise': sunrise,
       'sunset': sunset,
+      'daylength': daylength,
       'navkarshi': navkarshi,
       'porsi': porsi,
       'sadhporsi': sadhporsi,
@@ -45,6 +48,7 @@ class PaccakhanModel {
       date: map['date'],
       sunrise: map['sunrise'],
       sunset: map['sunset'],
+      daylength: map['daylength'],
       navkarshi: map['navkarshi'],
       porsi: map['porsi'],
       sadhporsi: map['sadhporsi'],
