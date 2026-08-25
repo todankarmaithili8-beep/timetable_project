@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:timetable_project/repository/paccakhan_repository.dart';
 import 'package:timetable_project/core/utils.dart';
-import 'package:timetable_project/screens/home_screen.dart';
 
 class TimetableScreen extends StatefulWidget {
   const TimetableScreen({super.key});
@@ -16,47 +15,57 @@ class _TimetableScreenState extends State<TimetableScreen> {
   // Currently selected date
   DateTime selectedDate = DateTime.now();
 
+  // Ratnagiri location
+  static const double latitude = 16.99;
+  static const double longitude = 73.31;
+  static const double timeZone = 5.5;
+
   @override
   Widget build(BuildContext context) {
+    // Repository data
     final data = repository.getPaccakhanData();
 
-    // Get selected date data from repository
-    final selectedData = data.firstWhere(
-      (item) => item.date == _formatDate(selectedDate),
-      orElse: () => data.first,
-    );
+    // Selected date string
+    final selectedDateString = _formatDate(selectedDate);
 
-    Color getDayColor(String dayType) {
-      switch (dayType) {
-        case 'Good Day':
-          return Colors.green;
+    // ---------------------------------------------------------
+    // FIND TITHI / GOOD-BAD DATA FROM REPOSITORY
+    // ---------------------------------------------------------
+    //
+    // Date repository mein available ho to data milega.
+    // Date repository mein nahi ho to null rahega.
+    //
+    final matchingData = data.where((item) => item.date == selectedDateString);
 
-        case 'Bad Day':
-          return Colors.red;
+    final selectedData = matchingData.isNotEmpty ? matchingData.first : null;
 
-        case 'Normal Day':
-          return Colors.blue;
-
-        default:
-          return Colors.grey;
-      }
-    }
-
-    //sunrise and sunset
+    // ---------------------------------------------------------
+    // SUNRISE & SUNSET
+    // ---------------------------------------------------------
+    //
+    // IMPORTANT:
+    // Sunrise/Sunset repository se nahi liya ja raha.
+    // Ye selectedDate ke according calculate ho raha hai.
+    //
     final result = PaccakhanTimeUtils.calculateSunriseSunset(
-      date: DateTime.now(),
-      latitude: 16.99,
-      longitude: 73.31,
-      timeZone: 5.5,
+      date: selectedDate,
+      latitude: latitude,
+      longitude: longitude,
+      timeZone: timeZone,
     );
 
     final sunrise = result['sunrise']!;
     final sunset = result['sunset']!;
 
-    print('Sunrise: $sunrise');
-    print('Sunset: $sunset');
+    // ---------------------------------------------------------
+    // DAY LENGTH
+    // ---------------------------------------------------------
 
     final dayLength = PaccakhanTimeUtils.calculateDayLength(sunrise, sunset);
+
+    // ---------------------------------------------------------
+    // PACCAKHAN TIMINGS
+    // ---------------------------------------------------------
 
     final navkarshi = PaccakhanTimeUtils.calculateNavkarshi(
       sunrise,
@@ -77,11 +86,15 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
     final avaddh = PaccakhanTimeUtils.calculateAvaddha(sunrise, dayLength);
 
-    // Current time
+    // ---------------------------------------------------------
+    // CURRENT TIME
+    // ---------------------------------------------------------
+
     final now = DateTime.now();
 
     String? comingPaccakhan;
 
+    // Upcoming Paccakhan only for today's date
     if (_formatDate(selectedDate) == _formatDate(now)) {
       comingPaccakhan = _getComingPaccakhan(
         now,
@@ -106,19 +119,33 @@ class _TimetableScreenState extends State<TimetableScreen> {
         padding: const EdgeInsets.all(8),
         child: Column(
           children: [
+            // =================================================
+            // DATE / TITHI / GOOD-BAD DAY CARD
+            // =================================================
             Card(
               elevation: 3,
-              color: getDayColor(selectedData.goodBadDay),
+
+              // Repository mein data available hai to
+              // Good/Bad/Normal ka color.
+              // Otherwise grey.
+              color: selectedData != null
+                  ? _getDayColor(selectedData.goodBadDay)
+                  : Colors.grey,
+
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
+
                 child: Column(
                   children: [
+                    // -------------------------------------------------
+                    // TITLE + CALENDAR
+                    // -------------------------------------------------
                     Row(
                       children: [
                         const Expanded(
                           child: Text(
-                            "Paccakhan Timetable",
+                            'Paccakhan Timetable',
                             style: TextStyle(
                               fontSize: 22,
                               color: Colors.white,
@@ -127,41 +154,38 @@ class _TimetableScreenState extends State<TimetableScreen> {
                           ),
                         ),
 
+                        // Calendar Button
                         IconButton(
                           icon: const Icon(
                             Icons.calendar_month,
                             color: Colors.white,
                           ),
+
                           onPressed: () async {
                             final pickedDate = await showDatePicker(
                               context: context,
+
+                              // Current selected date
                               initialDate: selectedDate,
+
+                              // FULL YEAR
                               firstDate: DateTime(2026, 1, 1),
                               lastDate: DateTime(2026, 12, 31),
                             );
 
-                            if (pickedDate != null) {
-                              final dateString = _formatDate(pickedDate);
-
-                              final isAvailable = data.any(
-                                (item) => item.date == dateString,
-                              );
-
-                              if (isAvailable) {
-                                setState(() {
-                                  selectedDate = pickedDate;
-                                });
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Paccakhan data not available for this date.',
-                                    ),
-                                    duration: Duration(seconds: 2),
-                                  ),
-                                );
-                              }
+                            if (pickedDate == null) {
+                              return;
                             }
+
+                            // Directly update selected date.
+                            //
+                            // IMPORTANT:
+                            // Repository mein date available hai ya nahi,
+                            // uske liye date selection block nahi hoga.
+                            //
+                            setState(() {
+                              selectedDate = pickedDate;
+                            });
                           },
                         ),
                       ],
@@ -169,11 +193,14 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
                     const SizedBox(height: 10),
 
+                    // -------------------------------------------------
+                    // DATE + DAY
+                    // -------------------------------------------------
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          _formatDisplayDate(_formatDate(selectedDate)),
+                          _formatDisplayDate(selectedDate),
                           style: const TextStyle(
                             fontSize: 16,
                             color: Colors.white,
@@ -195,8 +222,18 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
                     const SizedBox(height: 10),
 
+                    // -------------------------------------------------
+                    // TITHI
+                    // -------------------------------------------------
+                    //
+                    // Repository mein date hai:
+                    //     actual tithi
+                    //
+                    // Repository mein date nahi hai:
+                    //     Tithi Not Available
+                    //
                     Text(
-                      selectedData.tithi,
+                      selectedData?.tithi ?? 'Tithi Not Available',
                       style: const TextStyle(
                         fontSize: 16,
                         color: Colors.white,
@@ -210,20 +247,29 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
             const SizedBox(height: 8),
 
+            // =================================================
+            // SUNRISE & SUNSET
+            // =================================================
+            //
+            // Ye repository se nahi aa rahe.
+            // Ye selectedDate ke according calculate ho rahe hain.
+            //
             Row(
               children: [
                 Expanded(
                   child: _timeCard(
                     title: 'Sunrise',
-                    time: selectedData.sunrise,
+                    time: _formatTime(sunrise),
                     icon: Icons.sunny,
                   ),
                 ),
+
                 const SizedBox(width: 10),
+
                 Expanded(
                   child: _timeCard(
                     title: 'Sunset',
-                    time: selectedData.sunset,
+                    time: _formatTime(sunset),
                     icon: Icons.sunny_snowing,
                   ),
                 ),
@@ -232,6 +278,9 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
             const SizedBox(height: 15),
 
+            // =================================================
+            // PACCAKHAN TIMINGS
+            // =================================================
             const Align(
               alignment: Alignment.centerLeft,
               child: Text(
@@ -241,37 +290,88 @@ class _TimetableScreenState extends State<TimetableScreen> {
             ),
 
             const SizedBox(height: 8),
+
+            // Day Length
             _paccakhanTile('Day Length', _formatDuration(dayLength), false),
+
+            // Navkarshi
             _paccakhanTile(
               'Navkarshi',
               _formatTime(navkarshi),
               comingPaccakhan == 'Navkarshi',
             ),
+
+            // Porsi
             _paccakhanTile(
               'Porsi',
               _formatTime(porsi),
               comingPaccakhan == 'Porsi',
             ),
+
+            // Sadhporsi
             _paccakhanTile(
               'Sadhporsi',
               _formatTime(saddporsi),
               comingPaccakhan == 'Sadhporsi',
             ),
+
+            // Purimaddha
             _paccakhanTile(
               'Purimaddha',
               _formatTime(purimaddha),
               comingPaccakhan == 'Purimaddha',
             ),
+
+            // Avaddh
             _paccakhanTile(
               'Avaddh',
               _formatTime(avaddh),
               comingPaccakhan == 'Avaddh',
             ),
+
+            const SizedBox(height: 10),
+
+            // =================================================
+            // INFO IF REPOSITORY DATA NOT AVAILABLE
+            // =================================================
+            if (selectedData == null)
+              const Padding(
+                padding: EdgeInsets.all(8),
+                child: Text(
+                  'Tithi and day information is not available for this date.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+              ),
           ],
         ),
       ),
     );
   }
+
+  // =========================================================
+  // DAY COLOR
+  // =========================================================
+
+  Color _getDayColor(String dayType) {
+    switch (dayType) {
+      case 'Good Day':
+        return Colors.green;
+
+      case 'Bad Day':
+        return Colors.red;
+
+      case 'Normal Day':
+        return Colors.blue;
+
+      default:
+        return Colors.grey;
+    }
+  }
+
+  // =========================================================
+  // FIND UPCOMING PACCAKHAN
+  // =========================================================
 
   String? _getComingPaccakhan(
     DateTime now,
@@ -289,20 +389,25 @@ class _TimetableScreenState extends State<TimetableScreen> {
       'Avaddh': avaddh,
     };
 
-    // Get only future timings
+    // Only future timings
     final upcoming = timings.entries
         .where((entry) => entry.value.isAfter(now))
         .toList();
+
     // All timings completed
     if (upcoming.isEmpty) {
       return null;
     }
 
-    // Sort from nearest to farthest
+    // Nearest timing first
     upcoming.sort((a, b) => a.value.compareTo(b.value));
 
     return upcoming.first.key;
   }
+
+  // =========================================================
+  // SUNRISE / SUNSET CARD
+  // =========================================================
 
   Widget _timeCard({
     required String title,
@@ -311,14 +416,15 @@ class _TimetableScreenState extends State<TimetableScreen> {
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+
       decoration: BoxDecoration(
         color: Colors.orangeAccent,
         borderRadius: BorderRadius.circular(12),
       ),
+
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Icon + Title
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -338,7 +444,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
           const SizedBox(height: 10),
 
-          // Time
           Text(
             time ?? '--',
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -347,6 +452,10 @@ class _TimetableScreenState extends State<TimetableScreen> {
       ),
     );
   }
+
+  // =========================================================
+  // PACCAKHAN TILE
+  // =========================================================
 
   Widget _paccakhanTile(String name, String time, bool isComing) {
     return Card(
@@ -377,63 +486,53 @@ class _TimetableScreenState extends State<TimetableScreen> {
     );
   }
 
-  DateTime _parseTime(String time, String date) {
-    final dateParts = date.split('-');
-    final year = int.parse(dateParts[0]);
-    final month = int.parse(dateParts[1]);
-    final day = int.parse(dateParts[2]);
-
-    // Time format:
-    // hh:mm AM/PM
-
-    final timeParts = time.trim().split(' ');
-
-    final hourMinute = timeParts[0].split(':');
-
-    int hour = int.parse(hourMinute[0]);
-
-    final minute = int.parse(hourMinute[1]);
-
-    final period = timeParts[1].toUpperCase();
-
-    // Convert PM to 24-hour format
-    if (period == 'PM' && hour != 12) {
-      hour += 12;
-    }
-
-    // Convert 12 AM to 00
-    if (period == 'AM' && hour == 12) {
-      hour = 0;
-    }
-
-    return DateTime(year, month, day, hour, minute);
-  }
-
-  String _formatTime(DateTime time) {
-    int hour = time.hour;
-
-    final minute = time.minute.toString().padLeft(2, '0');
-    final period = hour >= 12 ? 'PM' : 'AM';
-    if (hour > 12) {
-      hour -= 12;
-    }
-    if (hour == 0) {
-      hour = 12;
-    }
-    return '$hour:$minute $period';
-  }
-
-  String _formatDuration(Duration duration) {
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    return '$hours hr $minutes min';
-  }
+  // =========================================================
+  // FORMAT DATE
+  // =========================================================
 
   String _formatDate(DateTime date) {
     return '${date.year}-'
         '${date.month.toString().padLeft(2, '0')}-'
         '${date.day.toString().padLeft(2, '0')}';
   }
+
+  // =========================================================
+  // FORMAT TIME
+  // =========================================================
+
+  String _formatTime(DateTime time) {
+    int hour = time.hour;
+
+    final minute = time.minute.toString().padLeft(2, '0');
+
+    final period = hour >= 12 ? 'PM' : 'AM';
+
+    if (hour > 12) {
+      hour -= 12;
+    }
+
+    if (hour == 0) {
+      hour = 12;
+    }
+
+    return '$hour:$minute $period';
+  }
+
+  // =========================================================
+  // FORMAT DURATION
+  // =========================================================
+
+  String _formatDuration(Duration duration) {
+    final hours = duration.inHours;
+
+    final minutes = duration.inMinutes.remainder(60);
+
+    return '$hours hr $minutes min';
+  }
+
+  // =========================================================
+  // DAY NAME
+  // =========================================================
 
   String _getDayName(DateTime date) {
     const days = [
@@ -449,13 +548,11 @@ class _TimetableScreenState extends State<TimetableScreen> {
     return days[date.weekday - 1];
   }
 
-  String _formatDisplayDate(String date) {
-    final parts = date.split('-');
+  // =========================================================
+  // DISPLAY DATE
+  // =========================================================
 
-    final year = int.parse(parts[0]);
-    final month = int.parse(parts[1]);
-    final day = int.parse(parts[2]);
-
+  String _formatDisplayDate(DateTime date) {
     const months = [
       'January',
       'February',
@@ -471,6 +568,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
       'December',
     ];
 
-    return '$day ${months[month - 1]} $year';
+    return '${date.day} '
+        '${months[date.month - 1]} '
+        '${date.year}';
   }
 }

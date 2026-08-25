@@ -2,23 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:timetable_project/repository/paccakhan_repository.dart';
 import 'package:timetable_project/core/utils.dart';
 import 'package:timetable_project/screens/settings_screen.dart';
-import 'package:timetable_project/screens/timetable_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
+
   final PaccakhanRepository repository = PaccakhanRepository();
 
   @override
   Widget build(BuildContext context) {
+    // Repository data
     final data = repository.getPaccakhanData();
 
-    // Today's date
+    // Today's actual date
     final today = DateTime.now();
 
+    // Get today's Tithi and Good/Bad Day from repository
     final todayData = data.firstWhere(
       (item) => item.date == _formatDate(today),
       orElse: () => data.first,
     );
+
+    // ---------------------------------------------------------
+    // Good / Bad / Normal Day Color
+    // ---------------------------------------------------------
+
     Color getDayColor(String dayType) {
       switch (dayType) {
         case 'Good Day':
@@ -35,9 +42,14 @@ class HomeScreen extends StatelessWidget {
       }
     }
 
-    //sunrise and sunset
+    // ---------------------------------------------------------
+    // Calculate Sunrise & Sunset
+    // ---------------------------------------------------------
+    // Sunrise and Sunset are NOT taken from repository.
+    // They are calculated using the actual today's date.
+
     final result = PaccakhanTimeUtils.calculateSunriseSunset(
-      date: DateTime.now(),
+      date: today,
       latitude: 16.99,
       longitude: 73.31,
       timeZone: 5.5,
@@ -46,29 +58,44 @@ class HomeScreen extends StatelessWidget {
     final sunrise = result['sunrise']!;
     final sunset = result['sunset']!;
 
-    print('Sunrise: $sunrise');
-    print('Sunset: $sunset');
+    print('Home Sunrise: $sunrise');
+    print('Home Sunset: $sunset');
 
+    // ---------------------------------------------------------
     // Calculate Day Length
+    // ---------------------------------------------------------
+
     final dayLength = PaccakhanTimeUtils.calculateDayLength(sunrise, sunset);
 
-    // Calculate Paccakhan timings
+    // ---------------------------------------------------------
+    // Calculate Paccakhan Timings
+    // ---------------------------------------------------------
+
     final navkarshi = PaccakhanTimeUtils.calculateNavkarshi(
       sunrise,
       const Duration(minutes: 48),
     );
+
     final porsi = PaccakhanTimeUtils.calculatePorasi(sunrise, dayLength);
+
     final saddporsi = PaccakhanTimeUtils.calculateSaddporasi(
       sunrise,
       dayLength,
     );
+
     final purimaddha = PaccakhanTimeUtils.calculatePurimaddha(
       sunrise,
       dayLength,
     );
+
     final avaddh = PaccakhanTimeUtils.calculateAvaddha(sunrise, dayLength);
-    // Current time
+
+    // ---------------------------------------------------------
+    // Current Time
+    // ---------------------------------------------------------
+
     final now = DateTime.now();
+
     // Find closest upcoming Paccakhan
     final comingPaccakhan = _getComingPaccakhan(
       now,
@@ -80,6 +107,9 @@ class HomeScreen extends StatelessWidget {
     );
 
     return Scaffold(
+      // -------------------------------------------------------
+      // AppBar
+      // -------------------------------------------------------
       appBar: AppBar(
         title: const Text(
           'Paccakhan Timetable',
@@ -99,11 +129,17 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
 
+      // -------------------------------------------------------
+      // Body
+      // -------------------------------------------------------
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(6),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // -------------------------------------------------
+            // Today's Paccakhan Card
+            // -------------------------------------------------
             Card(
               elevation: 3,
               color: getDayColor(todayData.goodBadDay),
@@ -123,10 +159,11 @@ class HomeScreen extends StatelessWidget {
 
                     const SizedBox(height: 5),
 
+                    // Date + Day
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Date
+                        // Today's actual date
                         Text(
                           _formatDisplayDate(_formatDate(today)),
                           style: const TextStyle(
@@ -137,7 +174,7 @@ class HomeScreen extends StatelessWidget {
 
                         const SizedBox(width: 8),
 
-                        // Day Name
+                        // Today's actual day name
                         Text(
                           _getDayName(today),
                           style: const TextStyle(
@@ -151,7 +188,7 @@ class HomeScreen extends StatelessWidget {
 
                     const SizedBox(height: 10),
 
-                    // Tithi
+                    // Tithi from repository
                     Text(
                       todayData.tithi,
                       style: const TextStyle(
@@ -160,6 +197,7 @@ class HomeScreen extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
+
                     const SizedBox(height: 5),
                   ],
                 ),
@@ -168,13 +206,15 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 5),
 
+            // -------------------------------------------------
             // Sunrise & Sunset
+            // -------------------------------------------------
             Row(
               children: [
                 Expanded(
                   child: _timeCard(
                     title: 'Sunrise',
-                    time: todayData.sunrise,
+                    time: _formatTime(sunrise),
                     icon: Icons.sunny,
                   ),
                 ),
@@ -184,7 +224,7 @@ class HomeScreen extends StatelessWidget {
                 Expanded(
                   child: _timeCard(
                     title: 'Sunset',
-                    time: todayData.sunset,
+                    time: _formatTime(sunset),
                     icon: Icons.sunny_snowing,
                   ),
                 ),
@@ -193,7 +233,9 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 15),
 
+            // -------------------------------------------------
             // Paccakhan Timings
+            // -------------------------------------------------
             const Text(
               'Paccakhan Timings',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -201,32 +243,38 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 1),
 
+            // Day Length
             _paccakhanTile('Day Length', _formatDuration(dayLength), false),
 
+            // Navkarshi
             _paccakhanTile(
               'Navkarshi',
               _formatTime(navkarshi),
               comingPaccakhan == 'Navkarshi',
             ),
 
+            // Porsi
             _paccakhanTile(
               'Porsi',
               _formatTime(porsi),
               comingPaccakhan == 'Porsi',
             ),
 
+            // Sadhporsi
             _paccakhanTile(
               'Sadhporsi',
               _formatTime(saddporsi),
               comingPaccakhan == 'Sadhporsi',
             ),
 
+            // Purimaddha
             _paccakhanTile(
               'Purimaddha',
               _formatTime(purimaddha),
               comingPaccakhan == 'Purimaddha',
             ),
 
+            // Avaddh
             _paccakhanTile(
               'Avaddh',
               _formatTime(avaddh),
@@ -238,7 +286,10 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // Find closest upcoming Paccakhan
+  // -----------------------------------------------------------
+  // Find Closest Upcoming Paccakhan
+  // -----------------------------------------------------------
+
   String? _getComingPaccakhan(
     DateTime now,
     DateTime navkarshi,
@@ -254,21 +305,26 @@ class HomeScreen extends StatelessWidget {
       'Purimaddha': purimaddha,
       'Avaddh': avaddh,
     };
+
     // Get only future timings
     final upcoming = timings.entries
         .where((entry) => entry.value.isAfter(now))
         .toList();
+
     // If all timings are completed
     if (upcoming.isEmpty) {
       return null;
     }
 
-    // Sort timings from nearest to farthest
+    // Sort from nearest to farthest
     upcoming.sort((a, b) => a.value.compareTo(b.value));
 
-    // Return closest upcoming Paccakhan
     return upcoming.first.key;
   }
+
+  // -----------------------------------------------------------
+  // Sunrise / Sunset Card
+  // -----------------------------------------------------------
 
   Widget _timeCard({
     required String title,
@@ -289,7 +345,9 @@ class HomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, size: 18),
+
               const SizedBox(width: 5),
+
               Text(
                 title,
                 style: const TextStyle(
@@ -312,12 +370,15 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  // -----------------------------------------------------------
   // Paccakhan Tile
+  // -----------------------------------------------------------
+
   Widget _paccakhanTile(String name, String time, bool isComing) {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
 
-      // Orange color only for closest upcoming Paccakhan
+      // Orange only for closest upcoming Paccakhan
       color: isComing ? Colors.orangeAccent : null,
 
       child: ListTile(
@@ -343,34 +404,20 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // Convert String date + time to DateTime
-  DateTime _parseTime(String time, String date) {
-    // Date format: yyyy-MM-dd
-    final dateParts = date.split('-');
-    final year = int.parse(dateParts[0]);
-    final month = int.parse(dateParts[1]);
-    final day = int.parse(dateParts[2]);
+  // -----------------------------------------------------------
+  // Format Date
+  // -----------------------------------------------------------
 
-    // Time format: hh:mm AM/PM
-    final timeParts = time.trim().split(' ');
-    final hourMinute = timeParts[0].split(':');
-    int hour = int.parse(hourMinute[0]);
-    final minute = int.parse(hourMinute[1]);
-    final period = timeParts[1].toUpperCase();
-
-    // Convert to 24-hour format
-    if (period == 'PM' && hour != 12) {
-      hour += 12;
-    }
-
-    if (period == 'AM' && hour == 12) {
-      hour = 0;
-    }
-
-    return DateTime(year, month, day, hour, minute);
+  String _formatDate(DateTime date) {
+    return '${date.year}-'
+        '${date.month.toString().padLeft(2, '0')}-'
+        '${date.day.toString().padLeft(2, '0')}';
   }
 
-  // Format DateTime to AM/PM
+  // -----------------------------------------------------------
+  // Format Time
+  // -----------------------------------------------------------
+
   String _formatTime(DateTime time) {
     int hour = time.hour;
 
@@ -389,22 +436,22 @@ class HomeScreen extends StatelessWidget {
     return '$hour:$minute $period';
   }
 
+  // -----------------------------------------------------------
   // Format Duration
+  // -----------------------------------------------------------
+
   String _formatDuration(Duration duration) {
     final hours = duration.inHours;
+
     final minutes = duration.inMinutes.remainder(60);
 
     return '$hours hr $minutes min';
   }
 
-  // Format DateTime to yyyy-MM-dd
-  String _formatDate(DateTime date) {
-    return '${date.year}-'
-        '${date.month.toString().padLeft(2, '0')}-'
-        '${date.day.toString().padLeft(2, '0')}';
-  }
-
+  // -----------------------------------------------------------
   // Get Day Name
+  // -----------------------------------------------------------
+
   String _getDayName(DateTime date) {
     const days = [
       'Monday',
@@ -419,7 +466,10 @@ class HomeScreen extends StatelessWidget {
     return days[date.weekday - 1];
   }
 
-  // Format date for display
+  // -----------------------------------------------------------
+  // Format Display Date
+  // -----------------------------------------------------------
+
   String _formatDisplayDate(String date) {
     final parts = date.split('-');
 
