@@ -10,7 +10,7 @@ class PaccakhanModel {
   final String avaddh;
   final String tithi;
   final String day;
-  final String specialday;
+  final String goodBadDay;
 
   PaccakhanModel({
     required this.date,
@@ -24,7 +24,7 @@ class PaccakhanModel {
     required this.avaddh,
     required this.tithi,
     required this.day,
-    required this.specialday,
+    required this.goodBadDay,
   });
 
   Map<String, dynamic> toMap() {
@@ -40,6 +40,7 @@ class PaccakhanModel {
       'avaddh': avaddh,
       'tithi': tithi,
       'day': day,
+      'goodbadday': goodBadDay,
     };
   }
 
@@ -56,7 +57,7 @@ class PaccakhanModel {
       avaddh: map['avaddh'],
       tithi: map['tithi'],
       day: map['day'],
-      specialday: map['normal'],
+      goodBadDay: map['goodbadday'],
     );
   }
 }

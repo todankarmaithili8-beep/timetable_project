@@ -19,10 +19,35 @@ class HomeScreen extends StatelessWidget {
       (item) => item.date == _formatDate(today),
       orElse: () => data.first,
     );
+    Color getDayColor(String dayType) {
+      switch (dayType) {
+        case 'Good Day':
+          return Colors.green;
 
-    // Convert sunrise and sunset to DateTime
-    final sunrise = _parseTime(todayData.sunrise, todayData.date);
-    final sunset = _parseTime(todayData.sunset, todayData.date);
+        case 'Bad Day':
+          return Colors.red;
+
+        case 'Normal Day':
+          return Colors.blue;
+
+        default:
+          return Colors.grey;
+      }
+    }
+
+    //sunrise and sunset
+    final result = PaccakhanTimeUtils.calculateSunriseSunset(
+      date: DateTime.now(),
+      latitude: 16.99,
+      longitude: 73.31,
+      timeZone: 5.5,
+    );
+
+    final sunrise = result['sunrise']!;
+    final sunset = result['sunset']!;
+
+    print('Sunrise: $sunrise');
+    print('Sunset: $sunset');
 
     // Calculate Day Length
     final dayLength = PaccakhanTimeUtils.calculateDayLength(sunrise, sunset);
@@ -81,7 +106,7 @@ class HomeScreen extends StatelessWidget {
           children: [
             Card(
               elevation: 3,
-              color: Colors.red,
+              color: getDayColor(todayData.goodBadDay),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(30),

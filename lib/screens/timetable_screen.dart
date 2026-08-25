@@ -26,10 +26,35 @@ class _TimetableScreenState extends State<TimetableScreen> {
       orElse: () => data.first,
     );
 
-    // Convert sunrise and sunset to DateTime
-    final sunrise = _parseTime(selectedData.sunrise, selectedData.date);
+    Color getDayColor(String dayType) {
+      switch (dayType) {
+        case 'Good Day':
+          return Colors.green;
 
-    final sunset = _parseTime(selectedData.sunset, selectedData.date);
+        case 'Bad Day':
+          return Colors.red;
+
+        case 'Normal Day':
+          return Colors.blue;
+
+        default:
+          return Colors.grey;
+      }
+    }
+
+    //sunrise and sunset
+    final result = PaccakhanTimeUtils.calculateSunriseSunset(
+      date: DateTime.now(),
+      latitude: 16.99,
+      longitude: 73.31,
+      timeZone: 5.5,
+    );
+
+    final sunrise = result['sunrise']!;
+    final sunset = result['sunset']!;
+
+    print('Sunrise: $sunrise');
+    print('Sunset: $sunset');
 
     final dayLength = PaccakhanTimeUtils.calculateDayLength(sunrise, sunset);
 
@@ -83,7 +108,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
           children: [
             Card(
               elevation: 3,
-              color: Colors.red,
+              color: getDayColor(selectedData.goodBadDay),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),

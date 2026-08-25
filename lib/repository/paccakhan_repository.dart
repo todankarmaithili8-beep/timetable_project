@@ -16,7 +16,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Navami',
         day: '',
-        specialday: 'Bad day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-08-22',
@@ -30,7 +30,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Dashami',
         day: '',
-        specialday: 'Bad day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-08-23',
@@ -44,7 +44,7 @@ class PaccakhanRepository {
         avaddh: '3:47 PM',
         tithi: 'Ekadashi',
         day: 'Sunday',
-        specialday: 'Bad day',
+        goodBadDay: 'Good Day',
       ),
 
       PaccakhanModel(
@@ -59,7 +59,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Dwadashi',
         day: '',
-        specialday: 'Bad day',
+        goodBadDay: 'Bad Day',
       ),
 
       PaccakhanModel(
@@ -74,7 +74,7 @@ class PaccakhanRepository {
         avaddh: ' ',
         tithi: 'Dwadashi',
         day: ' ',
-        specialday: 'Normal day',
+        goodBadDay: 'Normal Day',
       ),
       PaccakhanModel(
         date: '2026-08-26',
@@ -88,7 +88,7 @@ class PaccakhanRepository {
         avaddh: ' ',
         tithi: 'Trayodashi',
         day: ' ',
-        specialday: 'Normal day',
+        goodBadDay: 'Bad Day',
       ),
       PaccakhanModel(
         date: '2026-08-27',
@@ -102,7 +102,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Chaturdashi',
         day: '',
-        specialday: 'Bad day',
+        goodBadDay: 'Normal Day',
       ),
       PaccakhanModel(
         date: '2026-08-28',
@@ -116,7 +116,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Pournima',
         day: '',
-        specialday: 'Bad day',
+        goodBadDay: 'Normal Day',
       ),
       PaccakhanModel(
         date: '2026-08-29',
@@ -130,7 +130,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Pratipada',
         day: '',
-        specialday: 'Bad day',
+        goodBadDay: 'Normal Day',
       ),
       PaccakhanModel(
         date: '2026-08-30',
@@ -144,7 +144,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Dwitiya',
         day: '',
-        specialday: 'Good day',
+        goodBadDay: 'Normal Day',
       ),
       PaccakhanModel(
         date: '2026-08-31',
@@ -158,7 +158,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Tritiya',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-01',
@@ -172,7 +172,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Panchami',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-02',
@@ -186,7 +186,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Sashti',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-03',
@@ -200,7 +200,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Saptami',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-04',
@@ -214,7 +214,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Ashtami',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-05',
@@ -228,7 +228,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Navami',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-06',
@@ -242,7 +242,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Dashami',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-07',
@@ -256,7 +256,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Ekadashi',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-08',
@@ -270,7 +270,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Dwadashi',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-09',
@@ -284,7 +284,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Trayodashi',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-10',
@@ -298,7 +298,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Chaturdashi',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-11',
@@ -312,7 +312,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Amavasya',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-12',
@@ -326,7 +326,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Pratipada',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-13',
@@ -340,7 +340,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Dwitiya',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-14',
@@ -354,7 +354,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Tritiya',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-15',
@@ -368,7 +368,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Chaturthi',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-16',
@@ -382,7 +382,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Panchami',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-17',
@@ -396,7 +396,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Sashti',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-18',
@@ -410,7 +410,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Saptami',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-19',
@@ -424,7 +424,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Ashtami',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
       PaccakhanModel(
         date: '2026-09-20',
@@ -438,7 +438,7 @@ class PaccakhanRepository {
         avaddh: '',
         tithi: 'Navami',
         day: '',
-        specialday: 'Normal day',
+        goodBadDay: 'Good Day',
       ),
     ];
   }
