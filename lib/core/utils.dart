@@ -1,6 +1,10 @@
 import 'dart:math';
 
 class PaccakhanTimeUtils {
+  /// ============================================================
+  /// SUNRISE & SUNSET CALCULATION
+  /// ============================================================
+
   /// Calculates sunrise and sunset for a given date and location.
   ///
   /// Example Ratnagiri:
@@ -16,6 +20,7 @@ class PaccakhanTimeUtils {
     // ------------------------------------------------------------
     // 1. Calculate Day of Year
     // ------------------------------------------------------------
+
     final startOfYear = DateTime(date.year, 1, 1);
 
     final dayOfYear = date.difference(startOfYear).inDays + 1;
@@ -23,23 +28,23 @@ class PaccakhanTimeUtils {
     // ------------------------------------------------------------
     // 2. Solar Declination
     // ------------------------------------------------------------
+
     final solarDeclination = _calculateSolarDeclination(dayOfYear);
 
     // ------------------------------------------------------------
     // 3. Equation of Time
     // ------------------------------------------------------------
+
     final equationOfTime = _calculateEquationOfTime(dayOfYear);
 
     // ------------------------------------------------------------
     // 4. Hour Angle
     // ------------------------------------------------------------
+
     final latitudeRad = _toRadians(latitude);
+
     final declinationRad = _toRadians(solarDeclination);
 
-    // Sunrise/Sunset correction
-    // 90.833° = 90° + approximately 0.833°
-    // This accounts for atmospheric refraction
-    // and the Sun's apparent radius.
     const solarZenith = 90.833;
 
     final solarZenithRad = _toRadians(solarZenith);
@@ -55,21 +60,25 @@ class PaccakhanTimeUtils {
     // ------------------------------------------------------------
     // 5. Solar Noon
     // ------------------------------------------------------------
+
     final solarNoon = 12 + timeZone - (longitude / 15) - (equationOfTime / 60);
 
     // ------------------------------------------------------------
     // 6. Sunrise
     // ------------------------------------------------------------
+
     final sunriseHours = solarNoon - (hourAngle / 15);
 
     // ------------------------------------------------------------
     // 7. Sunset
     // ------------------------------------------------------------
+
     final sunsetHours = solarNoon + (hourAngle / 15);
 
     // ------------------------------------------------------------
     // 8. Convert decimal hours to DateTime
     // ------------------------------------------------------------
+
     final sunrise = _decimalHoursToDateTime(date, sunriseHours);
 
     final sunset = _decimalHoursToDateTime(date, sunsetHours);
@@ -125,6 +134,10 @@ class PaccakhanTimeUtils {
     return DateTime(date.year, date.month, date.day, hours, minutes, seconds);
   }
 
+  // ============================================================
+  // ANGLE CONVERSION
+  // ============================================================
+
   static double _toRadians(double degrees) {
     return degrees * pi / 180;
   }
@@ -132,6 +145,10 @@ class PaccakhanTimeUtils {
   static double _toDegrees(double radians) {
     return radians * 180 / pi;
   }
+
+  // ============================================================
+  // PACCAKHAN TIME CALCULATIONS
+  // ============================================================
 
   static Duration calculateDayLength(DateTime sunrise, DateTime sunset) {
     return sunset.difference(sunrise);
@@ -162,5 +179,126 @@ class PaccakhanTimeUtils {
     return sunrise.add(
       Duration(milliseconds: (dayLength.inMilliseconds * 3) ~/ 4),
     );
+  }
+
+  static const List<int> _tithiNumbers = [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    30,
+  ];
+
+  static const List<String> _tithiNames = [
+    'Pratipada',
+    'Dwitiya',
+    'Tritiya',
+    'Chaturthi',
+    'Panchami',
+    'Sashti',
+    'Saptami',
+    'Ashtami',
+    'Navavmi',
+    'Dashami',
+    'Ekadashi',
+    'Dwadashi',
+    'Trayodashi',
+    'Chaturdashi',
+    'Pournima',
+
+    'Pratipada',
+    'Dwitiya',
+    'Tritiya',
+    'Chaturthi',
+    'Panchami',
+    'Sashti',
+    'Saptami',
+    'Ashtami',
+    'Navavmi',
+    'Dashami',
+    'Ekadashi',
+    'Dwadashi',
+    'Trayodashi',
+    'Chaturdashi',
+    'Amavasya',
+  ];
+
+  /// Calculates Tithi number from date.
+  ///
+  /// Reference:
+  ///
+  /// 01 Jan 2026 = 13
+  /// 02 Jan 2026 = 14
+  /// 03 Jan 2026 = 15
+  /// 04 Jan 2026 = 1
+  /// 05 Jan 2026 = 2
+  ///
+  /// This calculation repeats the 30-position Tithi cycle.
+  static int calculateTithiNumber(DateTime date) {
+    final startDate = DateTime(2026, 1, 1);
+
+    final selectedDate = DateTime(date.year, date.month, date.day);
+
+    final days = selectedDate.difference(startDate).inDays;
+
+    int index = (12 + days) % 30;
+
+    // Handle dates before 01 Jan 2026
+    if (index < 0) {
+      index += 30;
+    }
+
+    return _tithiNumbers[index];
+  }
+
+  /// Calculates Tithi name from date.
+  ///
+  /// Example:
+  ///
+  /// 01 Jan 2026 = त्रयोदशी
+  /// 02 Jan 2026 = चतुर्दशी
+  /// 03 Jan 2026 = पौर्णिमा
+  /// 04 Jan 2026 = प्रतिपदा
+  static String calculateTithiName(DateTime date) {
+    final startDate = DateTime(2026, 1, 1);
+
+    final selectedDate = DateTime(date.year, date.month, date.day);
+
+    final days = selectedDate.difference(startDate).inDays;
+
+    int index = (12 + days) % 30;
+
+    // Handle dates before 01 Jan 2026
+    if (index < 0) {
+      index += 30;
+    }
+
+    return _tithiNames[index];
   }
 }

@@ -8,77 +8,102 @@ class HomeScreen extends StatelessWidget {
 
   final PaccakhanRepository repository = PaccakhanRepository();
 
+  static const double latitude = 16.99;
+  static const double longitude = 73.31;
+  static const double timeZone = 5.5;
+
   @override
   Widget build(BuildContext context) {
-    // Repository data
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
     final data = repository.getPaccakhanData();
+    final todayString = _formatDate(today);
 
-    // Today's actual date
-    final today = DateTime.now();
+    // ============================================================
+    // REPOSITORY DATA
+    // ============================================================
 
-    // Get today's Tithi and Good/Bad Day from repository
-    final todayData = data.firstWhere(
-      (item) => item.date == _formatDate(today),
-      orElse: () => data.first,
-    );
+    // Find today's repository data.
+    final matchingData = data.where((item) => item.date == todayString);
 
-    // ---------------------------------------------------------
-    // Good / Bad / Normal Day Color
-    // ---------------------------------------------------------
+    final todayData = matchingData.isNotEmpty ? matchingData.first : null;
 
-    Color getDayColor(String dayType) {
-      switch (dayType) {
-        case 'Good Day':
-          return Colors.green;
+    // ============================================================
+    // TITHI
+    // ============================================================
 
-        case 'Bad Day':
-          return Colors.red;
+    // Tithi is now taken from repository instead of calculation function.
+    final tithiName = todayData?.tithi ?? 'Not Available';
 
-        case 'Normal Day':
-          return Colors.blue;
+    //COMMENTED
+    //
+    // final tithiNumber =
+    //     PaccakhanTimeUtils.calculateTithiNumber(today);
+    //
+    // final tithiName =
+    //     PaccakhanTimeUtils.calculateTithiName(today);
 
-        default:
-          return Colors.grey;
-      }
-    }
+    // ============================================================
+    // CONSOLE
+    // ============================================================
 
-    // ---------------------------------------------------------
-    // Calculate Sunrise & Sunset
-    // ---------------------------------------------------------
-    // Sunrise and Sunset are NOT taken from repository.
-    // They are calculated using the actual today's date.
+    print('------------------------------------------');
+    print('Today Date      : $todayString');
 
-    final result = PaccakhanTimeUtils.calculateSunriseSunset(
+    // CHANGED:
+    // Tithi comes from repository.
+    print('Tithi Name      : $tithiName');
+
+    // OLD:
+    // print('Tithi Number    : $tithiNumber');
+
+    print('Good/Bad Day    : ${todayData?.goodBadDay ?? "Not Available"}');
+    print('------------------------------------------');
+
+    // ============================================================
+    // DAY COLOR
+    // ============================================================
+
+    final dayColor = _getDayColor(todayData?.goodBadDay);
+
+    // ============================================================
+    // SUNRISE & SUNSET
+    // ============================================================
+
+    final solarResult = PaccakhanTimeUtils.calculateSunriseSunset(
       date: today,
-      latitude: 16.99,
-      longitude: 73.31,
-      timeZone: 5.5,
+      latitude: latitude,
+      longitude: longitude,
+      timeZone: timeZone,
     );
 
-    final sunrise = result['sunrise']!;
-    final sunset = result['sunset']!;
+    final sunrise = solarResult['sunrise']!;
+    final sunset = solarResult['sunset']!;
 
-    print('Home Sunrise: $sunrise');
-    print('Home Sunset: $sunset');
+    print('Sunrise        : $sunrise');
+    print('Sunset         : $sunset');
 
-    // ---------------------------------------------------------
-    // Calculate Day Length
-    // ---------------------------------------------------------
+    // ============================================================
+    // DAY LENGTH
+    // ============================================================
 
     final dayLength = PaccakhanTimeUtils.calculateDayLength(sunrise, sunset);
 
-    // ---------------------------------------------------------
-    // Calculate Paccakhan Timings
-    // ---------------------------------------------------------
+    print('Day Length     : ${_formatDuration(dayLength)}');
+
+    // ============================================================
+    // PACCAKHAN TIMINGS
+    // ============================================================
 
     final navkarshi = PaccakhanTimeUtils.calculateNavkarshi(
       sunrise,
       const Duration(minutes: 48),
     );
 
-    final porsi = PaccakhanTimeUtils.calculatePorasi(sunrise, dayLength);
+    final porasi = PaccakhanTimeUtils.calculatePorasi(sunrise, dayLength);
 
-    final saddporsi = PaccakhanTimeUtils.calculateSaddporasi(
+    final saddporasi = PaccakhanTimeUtils.calculateSaddporasi(
       sunrise,
       dayLength,
     );
@@ -88,28 +113,34 @@ class HomeScreen extends StatelessWidget {
       dayLength,
     );
 
-    final avaddh = PaccakhanTimeUtils.calculateAvaddha(sunrise, dayLength);
+    final avaddha = PaccakhanTimeUtils.calculateAvaddha(sunrise, dayLength);
 
-    // ---------------------------------------------------------
-    // Current Time
-    // ---------------------------------------------------------
+    print('Navkarshi      : ${_formatTime24(navkarshi)}');
+    print('Porasi         : ${_formatTime24(porasi)}');
+    print('Saddporasi     : ${_formatTime24(saddporasi)}');
+    print('Purimaddha     : ${_formatTime24(purimaddha)}');
+    print('Avaddha        : ${_formatTime24(avaddha)}');
 
-    final now = DateTime.now();
+    // ============================================================
+    // UPCOMING PACCAKHAN
+    // ============================================================
 
-    // Find closest upcoming Paccakhan
+    final currentTime = DateTime.now();
+
     final comingPaccakhan = _getComingPaccakhan(
-      now,
+      currentTime,
       navkarshi,
-      porsi,
-      saddporsi,
+      porasi,
+      saddporasi,
       purimaddha,
-      avaddh,
+      avaddha,
     );
 
+    // ============================================================
+    // UI
+    // ============================================================
+
     return Scaffold(
-      // -------------------------------------------------------
-      // AppBar
-      // -------------------------------------------------------
       appBar: AppBar(
         title: const Text(
           'Paccakhan Timetable',
@@ -129,23 +160,20 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
 
-      // -------------------------------------------------------
-      // Body
-      // -------------------------------------------------------
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.all(8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // -------------------------------------------------
-            // Today's Paccakhan Card
-            // -------------------------------------------------
+            // ====================================================
+            // TODAY'S PACCAKHAN CARD
+            // ====================================================
             Card(
               elevation: 3,
-              color: getDayColor(todayData.goodBadDay),
+              color: dayColor,
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(30),
+                padding: const EdgeInsets.all(28),
                 child: Column(
                   children: [
                     const Text(
@@ -157,15 +185,13 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 8),
 
-                    // Date + Day
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Today's actual date
                         Text(
-                          _formatDisplayDate(_formatDate(today)),
+                          _formatDisplayDate(today),
                           style: const TextStyle(
                             fontSize: 16,
                             color: Colors.white,
@@ -174,48 +200,55 @@ class HomeScreen extends StatelessWidget {
 
                         const SizedBox(width: 8),
 
-                        // Today's actual day name
                         Text(
                           _getDayName(today),
                           style: const TextStyle(
                             fontSize: 16,
                             color: Colors.white,
-                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
 
-                    // Tithi from repository
+                    // ==================================================
+                    // CHANGED:
+                    // TITHI IS DISPLAYED FROM REPOSITORY
+                    // ==================================================
                     Text(
-                      todayData.tithi,
+                      tithiName,
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 17,
                         color: Colors.white,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
 
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 8),
+
+                    // Optional: show Good/Bad/Normal Day
+                    Text(
+                      todayData?.goodBadDay ?? 'Not Available',
+                      style: const TextStyle(fontSize: 16, color: Colors.white),
+                    ),
                   ],
                 ),
               ),
             ),
 
-            const SizedBox(height: 5),
+            const SizedBox(height: 8),
 
-            // -------------------------------------------------
-            // Sunrise & Sunset
-            // -------------------------------------------------
+            // ====================================================
+            // SUNRISE / SUNSET
+            // ====================================================
             Row(
               children: [
                 Expanded(
                   child: _timeCard(
                     title: 'Sunrise',
                     time: _formatTime(sunrise),
-                    icon: Icons.sunny,
+                    icon: Icons.wb_sunny,
                   ),
                 ),
 
@@ -225,7 +258,7 @@ class HomeScreen extends StatelessWidget {
                   child: _timeCard(
                     title: 'Sunset',
                     time: _formatTime(sunset),
-                    icon: Icons.sunny_snowing,
+                    icon: Icons.wb_twilight,
                   ),
                 ),
               ],
@@ -233,52 +266,61 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 15),
 
-            // -------------------------------------------------
-            // Paccakhan Timings
-            // -------------------------------------------------
             const Text(
               'Paccakhan Timings',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
 
-            const SizedBox(height: 1),
+            const SizedBox(height: 8),
 
-            // Day Length
+            // ====================================================
+            // DAY LENGTH
+            // ====================================================
             _paccakhanTile('Day Length', _formatDuration(dayLength), false),
 
-            // Navkarshi
+            // ====================================================
+            // NAVKARSHI
+            // ====================================================
             _paccakhanTile(
               'Navkarshi',
               _formatTime(navkarshi),
               comingPaccakhan == 'Navkarshi',
             ),
 
-            // Porsi
+            // ====================================================
+            // PORASI
+            // ====================================================
             _paccakhanTile(
-              'Porsi',
-              _formatTime(porsi),
-              comingPaccakhan == 'Porsi',
+              'Porasi',
+              _formatTime(porasi),
+              comingPaccakhan == 'Porasi',
             ),
 
-            // Sadhporsi
+            // ====================================================
+            // SADD PORASI
+            // ====================================================
             _paccakhanTile(
-              'Sadhporsi',
-              _formatTime(saddporsi),
-              comingPaccakhan == 'Sadhporsi',
+              'Saddporasi',
+              _formatTime(saddporasi),
+              comingPaccakhan == 'Saddporasi',
             ),
 
-            // Purimaddha
+            // ====================================================
+            // PURIMADDHA
+            // ====================================================
             _paccakhanTile(
               'Purimaddha',
               _formatTime(purimaddha),
               comingPaccakhan == 'Purimaddha',
             ),
 
-            // Avaddh
+            // ====================================================
+            // AVADDHA
+            // ====================================================
             _paccakhanTile(
-              'Avaddh',
-              _formatTime(avaddh),
-              comingPaccakhan == 'Avaddh',
+              'Avaddha',
+              _formatTime(avaddha),
+              comingPaccakhan == 'Avaddha',
             ),
           ],
         ),
@@ -286,61 +328,76 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // -----------------------------------------------------------
-  // Find Closest Upcoming Paccakhan
-  // -----------------------------------------------------------
+  // ==============================================================
+  // GOOD / BAD / NORMAL DAY COLOR
+  // ==============================================================
+
+  Color _getDayColor(String? dayType) {
+    switch (dayType) {
+      case 'Good Day':
+        return Colors.green;
+
+      case 'Bad Day':
+        return Colors.red;
+
+      case 'Normal Day':
+        return Colors.blue;
+
+      default:
+        return Colors.grey;
+    }
+  }
+
+  // ==============================================================
+  // FIND COMING PACCAKHAN
+  // ==============================================================
 
   String? _getComingPaccakhan(
     DateTime now,
     DateTime navkarshi,
-    DateTime porsi,
-    DateTime saddporsi,
+    DateTime porasi,
+    DateTime saddporasi,
     DateTime purimaddha,
-    DateTime avaddh,
+    DateTime avaddha,
   ) {
     final timings = {
       'Navkarshi': navkarshi,
-      'Porsi': porsi,
-      'Sadhporsi': saddporsi,
+      'Porasi': porasi,
+      'Saddporasi': saddporasi,
       'Purimaddha': purimaddha,
-      'Avaddh': avaddh,
+      'Avaddha': avaddha,
     };
 
-    // Get only future timings
     final upcoming = timings.entries
         .where((entry) => entry.value.isAfter(now))
         .toList();
 
-    // If all timings are completed
     if (upcoming.isEmpty) {
       return null;
     }
 
-    // Sort from nearest to farthest
     upcoming.sort((a, b) => a.value.compareTo(b.value));
 
     return upcoming.first.key;
   }
 
-  // -----------------------------------------------------------
-  // Sunrise / Sunset Card
-  // -----------------------------------------------------------
+  // ==============================================================
+  // SUNRISE / SUNSET CARD
+  // ==============================================================
 
   Widget _timeCard({
     required String title,
-    required String? time,
+    required String time,
     required IconData icon,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 52, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.orangeAccent,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Icon + Title
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -358,29 +415,25 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
 
-          // Time
           Text(
-            time ?? '--',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            time,
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
           ),
         ],
       ),
     );
   }
 
-  // -----------------------------------------------------------
-  // Paccakhan Tile
-  // -----------------------------------------------------------
+  // ==============================================================
+  // PACCAKHAN TILE
+  // ==============================================================
 
   Widget _paccakhanTile(String name, String time, bool isComing) {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
-
-      // Orange only for closest upcoming Paccakhan
       color: isComing ? Colors.orangeAccent : null,
-
       child: ListTile(
         leading: Icon(Icons.access_time, color: isComing ? Colors.white : null),
 
@@ -404,9 +457,9 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // -----------------------------------------------------------
-  // Format Date
-  // -----------------------------------------------------------
+  // ==============================================================
+  // FORMAT DATE FOR REPOSITORY
+  // ==============================================================
 
   String _formatDate(DateTime date) {
     return '${date.year}-'
@@ -414,9 +467,34 @@ class HomeScreen extends StatelessWidget {
         '${date.day.toString().padLeft(2, '0')}';
   }
 
-  // -----------------------------------------------------------
-  // Format Time
-  // -----------------------------------------------------------
+  // ==============================================================
+  // DISPLAY DATE
+  // ==============================================================
+
+  String _formatDisplayDate(DateTime date) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+
+    return '${date.day} '
+        '${months[date.month - 1]} '
+        '${date.year}';
+  }
+
+  // ==============================================================
+  // FORMAT TIME
+  // ==============================================================
 
   String _formatTime(DateTime time) {
     int hour = time.hour;
@@ -436,9 +514,19 @@ class HomeScreen extends StatelessWidget {
     return '$hour:$minute $period';
   }
 
-  // -----------------------------------------------------------
-  // Format Duration
-  // -----------------------------------------------------------
+  // ==============================================================
+  // FORMAT 24 HOUR TIME
+  // ==============================================================
+
+  String _formatTime24(DateTime time) {
+    return '${time.hour.toString().padLeft(2, '0')}:'
+        '${time.minute.toString().padLeft(2, '0')}:'
+        '${time.second.toString().padLeft(2, '0')}';
+  }
+
+  // ==============================================================
+  // FORMAT DAY LENGTH
+  // ==============================================================
 
   String _formatDuration(Duration duration) {
     final hours = duration.inHours;
@@ -448,9 +536,9 @@ class HomeScreen extends StatelessWidget {
     return '$hours hr $minutes min';
   }
 
-  // -----------------------------------------------------------
-  // Get Day Name
-  // -----------------------------------------------------------
+  // ==============================================================
+  // DAY NAME
+  // ==============================================================
 
   String _getDayName(DateTime date) {
     const days = [
@@ -464,34 +552,5 @@ class HomeScreen extends StatelessWidget {
     ];
 
     return days[date.weekday - 1];
-  }
-
-  // -----------------------------------------------------------
-  // Format Display Date
-  // -----------------------------------------------------------
-
-  String _formatDisplayDate(String date) {
-    final parts = date.split('-');
-
-    final year = int.parse(parts[0]);
-    final month = int.parse(parts[1]);
-    final day = int.parse(parts[2]);
-
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-
-    return '$day ${months[month - 1]} $year';
   }
 }
