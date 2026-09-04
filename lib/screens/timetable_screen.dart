@@ -305,24 +305,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
   // ============================================================
   // FETCH TITHI FROM FIREBASE
-  // ============================================================
-  //
-  // Firebase example:
-  //
-  // {
-  //   id: 8,
-  //   Tithi: Ashtami
-  // }
-  //
-  // id = Tithi ID
-  //
-  // Good/Bad/Normal is NOT fetched from Firebase.
-  //
-  // It is calculated using:
-  //
+
   // Firebase ID + selected date weekday
-  //
-  // ============================================================
 
   Future<void> _fetchFirebaseData(DateTime date) async {
     try {
@@ -446,16 +430,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
     }
   }
 
-  // ============================================================
-  // BUILD
-  // ============================================================
-
   @override
   Widget build(BuildContext context) {
-    // ==========================================================
-    // DATE
-    // ==========================================================
-
     final selectedDateString = _formatDate(_selectedDate);
 
     print('Current selected date: $selectedDateString');
@@ -484,15 +460,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
     final displayDate = _formatDisplayDate(_selectedDate);
 
-    // ==========================================================
-    // DAY NAME
-    // ==========================================================
-
     final displayDay = _getDayName(_selectedDate);
-
-    // ==========================================================
-    // SUNRISE / SUNSET
-    // ==========================================================
 
     final solarResult = PaccakhanTimeUtils.calculateSunriseSunset(
       date: _selectedDate,
@@ -505,15 +473,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
     final sunset = solarResult['sunset']!;
 
-    // ==========================================================
-    // DAY LENGTH
-    // ==========================================================
-
     final dayLength = PaccakhanTimeUtils.calculateDayLength(sunrise, sunset);
-
-    // ==========================================================
-    // PACCAKHAN TIMINGS
-    // ==========================================================
 
     final navkarshi = PaccakhanTimeUtils.calculateNavkarshi(
       sunrise,
@@ -534,10 +494,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
     final avaddh = PaccakhanTimeUtils.calculateAvaddha(sunrise, dayLength);
 
-    // ==========================================================
-    // CURRENT TIME
-    // ==========================================================
-
     final now = DateTime.now();
 
     String? comingPaccakhan;
@@ -554,15 +510,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
       );
     }
 
-    // ==========================================================
-    // DAY COLOR
-    // ==========================================================
-
     final dayColor = _getDayColor(goodBadDay);
-
-    // ==========================================================
-    // UI
-    // ==========================================================
 
     return Scaffold(
       appBar: AppBar(
@@ -578,9 +526,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
         child: Column(
           children: [
-            // ==================================================
-            // MAIN CARD
-            // ==================================================
             Card(
               elevation: 3,
               color: dayColor,
@@ -595,9 +540,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
                 child: Column(
                   children: [
-                    // ==========================================
-                    // TITLE + CALENDAR
-                    // ==========================================
                     Row(
                       children: [
                         const Expanded(
@@ -625,9 +567,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
                       ],
                     ),
 
-                    // ==========================================
-                    // PREVIOUS + DATE + NEXT
-                    // ==========================================
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
 
@@ -707,11 +646,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
                     // ==========================================
                     // GOOD / BAD / NORMAL DAY
                     // ==========================================
-                    Text(
-                      goodBadDay,
-
-                      style: const TextStyle(fontSize: 16, color: Colors.white),
-                    ),
                   ],
                 ),
               ),
@@ -719,9 +653,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
             const SizedBox(height: 7),
 
-            // ==================================================
-            // SUNRISE / SUNSET
-            // ==================================================
             Row(
               children: [
                 Expanded(

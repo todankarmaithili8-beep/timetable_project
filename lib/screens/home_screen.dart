@@ -34,10 +34,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _fetchFirebaseData(today);
   }
 
-  // ============================================================
-  // FORMAT DATE
-  // ============================================================
-
   String _formatDate(DateTime date) {
     return '${date.year}-'
         '${date.month.toString().padLeft(2, '0')}-'
@@ -56,35 +52,15 @@ class _HomeScreenState extends State<HomeScreen> {
       print('Firestore fetching date: $dateString');
       print('==========================================');
 
-      // --------------------------------------------------------
-      // GET DATA FROM FIRESTORE
-      // --------------------------------------------------------
-
       final firebaseData = await repository.getTithiAndDayType(dateString);
 
       if (!mounted) {
         return;
       }
-
-      // ========================================================
-      // FIRESTORE DATA FOUND
-      // ========================================================
-
       if (firebaseData != null) {
         print('Firestore data: $firebaseData');
-
-        // ------------------------------------------------------
-        // TITHI
-        // ------------------------------------------------------
-
         final tithi = firebaseData['Tithi']?.toString().trim();
-
-        // ------------------------------------------------------
-        // TITHI ID
-        // ------------------------------------------------------
-
         final id = firebaseData['id']?.toString().trim();
-
         print('Firestore Tithi: $tithi');
         print('Firestore ID   : $id');
 
@@ -304,38 +280,22 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     final sunrise = solarResult['sunrise']!;
-
     final sunset = solarResult['sunset']!;
-
     final dayLength = PaccakhanTimeUtils.calculateDayLength(sunrise, sunset);
-
-    // ==========================================================
-    // PACCAKHAN TIMINGS
-    // ==========================================================
-
     final navkarshi = PaccakhanTimeUtils.calculateNavkarshi(
       sunrise,
       const Duration(minutes: 48),
     );
-
     final porasi = PaccakhanTimeUtils.calculatePorasi(sunrise, dayLength);
-
     final saddporasi = PaccakhanTimeUtils.calculateSaddporasi(
       sunrise,
       dayLength,
     );
-
     final purimaddha = PaccakhanTimeUtils.calculatePurimaddha(
       sunrise,
       dayLength,
     );
-
     final avaddha = PaccakhanTimeUtils.calculateAvaddha(sunrise, dayLength);
-
-    // ==========================================================
-    // CURRENT TIME
-    // ==========================================================
-
     final currentTime = DateTime.now();
 
     final comingPaccakhan = _getComingPaccakhan(
@@ -379,9 +339,6 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
 
           children: [
-            // ==================================================
-            // TODAY'S PACCAKHAN CARD
-            // ==================================================
             Card(
               elevation: 3,
               color: dayColor,
@@ -396,9 +353,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 child: Column(
                   children: [
-                    // ==========================================
-                    // TITLE
-                    // ==========================================
                     const Text(
                       "Today's Paccakhan",
 
@@ -410,10 +364,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
 
                     const SizedBox(height: 10),
-
-                    // ==========================================
-                    // DATE + DAY
-                    // ==========================================
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
 
@@ -442,11 +392,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     const SizedBox(height: 10),
 
-                    // ==========================================
-                    // TITHI
-                    //
-                    // FIREBASE
-                    // ==========================================
                     _isFirebaseLoading
                         ? const SizedBox(
                             height: 20,
