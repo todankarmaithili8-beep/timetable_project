@@ -3,73 +3,298 @@ import 'package:timetable_project/repository/paccakhan_repository.dart';
 import 'package:timetable_project/core/utils.dart';
 import 'package:timetable_project/screens/settings_screen.dart';
 
-class HomeScreen extends StatelessWidget {
-  HomeScreen({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   final PaccakhanRepository repository = PaccakhanRepository();
+
+  String? _firebaseTithi;
+  String? _firebaseId;
+
+  bool _isFirebaseLoading = true;
 
   static const double latitude = 16.99;
   static const double longitude = 73.31;
   static const double timeZone = 5.5;
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
+
     final now = DateTime.now();
+
     final today = DateTime(now.year, now.month, now.day);
 
-    final data = repository.getPaccakhanData();
+    // Fetch today's Tithi + ID from Firebase
+    _fetchFirebaseData(today);
+  }
+
+  // ============================================================
+  // FORMAT DATE
+  // ============================================================
+
+  String _formatDate(DateTime date) {
+    return '${date.year}-'
+        '${date.month.toString().padLeft(2, '0')}-'
+        '${date.day.toString().padLeft(2, '0')}';
+  }
+
+  // ============================================================
+  // FETCH TITHI + ID FROM FIREBASE
+  // ============================================================
+
+  Future<void> _fetchFirebaseData(DateTime date) async {
+    try {
+      final dateString = _formatDate(date);
+
+      print('==========================================');
+      print('Firestore fetching date: $dateString');
+      print('==========================================');
+
+      // --------------------------------------------------------
+      // GET DATA FROM FIRESTORE
+      // --------------------------------------------------------
+
+      final firebaseData = await repository.getTithiAndDayType(dateString);
+
+      if (!mounted) {
+        return;
+      }
+
+      // ========================================================
+      // FIRESTORE DATA FOUND
+      // ========================================================
+
+      if (firebaseData != null) {
+        print('Firestore data: $firebaseData');
+
+        // ------------------------------------------------------
+        // TITHI
+        // ------------------------------------------------------
+
+        final tithi = firebaseData['Tithi']?.toString().trim();
+
+        // ------------------------------------------------------
+        // TITHI ID
+        // ------------------------------------------------------
+
+        final id = firebaseData['id']?.toString().trim();
+
+        print('Firestore Tithi: $tithi');
+        print('Firestore ID   : $id');
+
+        setState(() {
+          if (tithi != null && tithi.isNotEmpty) {
+            _firebaseTithi = tithi;
+          } else {
+            _firebaseTithi = null;
+          }
+
+          if (id != null && id.isNotEmpty) {
+            _firebaseId = id;
+          } else {
+            _firebaseId = null;
+          }
+
+          _isFirebaseLoading = false;
+        });
+      }
+      // ========================================================
+      // FIRESTORE DATA NOT FOUND
+      // ========================================================
+      else {
+        print('No Firestore data found for $dateString');
+
+        setState(() {
+          _firebaseTithi = null;
+          _firebaseId = null;
+          _isFirebaseLoading = false;
+        });
+      }
+    }
+    // ==========================================================
+    // FIRESTORE ERROR
+    // ==========================================================
+    catch (e) {
+      print('Firestore error: $e');
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _firebaseTithi = null;
+        _firebaseId = null;
+        _isFirebaseLoading = false;
+      });
+    }
+  }
+
+  // GOOD / BAD / NORMAL DAY LOGIC
+  // id = Tithi ID
+  // Table:
+  // Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday
+  // 1 = Good Day
+  // 2 = Bad Day
+  // 3 = Normal Day
+  // ============================================================
+
+  String _getGoodBadNormalDay({required int tithiId, required DateTime date}) {
+    if (tithiId < 1 || tithiId > 15) {
+      return 'Not Available';
+    }
+
+    // WEEKDAY
+    // Sunday    = 0
+    // Monday    = 1
+    // Tuesday   = 2
+    // Wednesday = 3
+    // Thursday  = 4
+    // Friday    = 5
+    // Saturday  = 6
+    // ----------------------------------------------------------
+
+    final weekdayIndex = date.weekday % 7;
+
+    // Column order:
+    // Sun Mon Tue Wed Thu Fri Sat
+
+    const table = [
+      // --------------------------------------------------------
+      // Tithi 1 - Pratipada
+      // --------------------------------------------------------
+      [2, 3, 2, 3, 3, 1, 3],
+
+      // --------------------------------------------------------
+      // Tithi 2 - Dwitiya
+      // --------------------------------------------------------
+      [3, 2, 3, 1, 2, 3, 3],
+
+      // --------------------------------------------------------
+      // Tithi 3 - Tritiya
+      // --------------------------------------------------------
+      [3, 3, 1, 2, 3, 3, 3],
+
+      // --------------------------------------------------------
+      // Tithi 4 - Chaturthi
+      // --------------------------------------------------------
+      [3, 3, 3, 3, 3, 2, 1],
+
+      // --------------------------------------------------------
+      // Tithi 5 - Panchami
+      // --------------------------------------------------------
+      [3, 3, 3, 3, 1, 3, 2],
+
+      // --------------------------------------------------------
+      // Tithi 6 - Shashthi
+      // --------------------------------------------------------
+      [2, 3, 2, 3, 3, 1, 3],
+
+      // --------------------------------------------------------
+      // Tithi 7 - Saptami
+      // --------------------------------------------------------
+      [3, 2, 3, 1, 2, 3, 3],
+
+      // --------------------------------------------------------
+      // Tithi 8 - Ashtami
+      // --------------------------------------------------------
+      [3, 3, 1, 2, 3, 3, 3],
+
+      // --------------------------------------------------------
+      // Tithi 9 - Navami
+      // --------------------------------------------------------
+      [3, 3, 3, 3, 3, 2, 1],
+
+      // --------------------------------------------------------
+      // Tithi 10 - Dashami
+      // --------------------------------------------------------
+      [3, 3, 3, 3, 1, 3, 2],
+
+      // --------------------------------------------------------
+      // Tithi 11 - Ekadashi
+      // --------------------------------------------------------
+      [2, 3, 2, 3, 3, 1, 3],
+
+      // --------------------------------------------------------
+      // Tithi 12 - Dwadashi
+      // --------------------------------------------------------
+      [3, 2, 3, 1, 2, 3, 3],
+
+      // --------------------------------------------------------
+      // Tithi 13 - Trayodashi
+      // --------------------------------------------------------
+      [3, 3, 1, 2, 3, 3, 3],
+
+      // --------------------------------------------------------
+      // Tithi 14 - Chaturdashi
+      // --------------------------------------------------------
+      [3, 3, 3, 3, 3, 2, 1],
+
+      // --------------------------------------------------------
+      // Tithi 15 - Purnima
+      // --------------------------------------------------------
+      [3, 3, 3, 3, 1, 3, 2],
+    ];
+
+    // ----------------------------------------------------------
+    // GET VALUE FROM TABLE
+    // ----------------------------------------------------------
+
+    final value = table[tithiId - 1][weekdayIndex];
+
+    // ----------------------------------------------------------
+    // CONVERT 1 / 2 / 3 TO DAY TYPE
+    // ----------------------------------------------------------
+
+    switch (value) {
+      case 1:
+        return 'Good Day';
+
+      case 2:
+        return 'Bad Day';
+
+      case 3:
+        return 'Normal Day';
+
+      default:
+        return 'Not Available';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+
+    final today = DateTime(now.year, now.month, now.day);
+
     final todayString = _formatDate(today);
 
-    // ============================================================
-    // REPOSITORY DATA
-    // ============================================================
+    final tithiName = _firebaseTithi ?? 'Not Available';
+    final idString = _firebaseId ?? 'Not Available';
+    final tithiId = int.tryParse(idString);
 
-    // Find today's repository data.
-    final matchingData = data.where((item) => item.date == todayString);
+    // GOOD / BAD / NORMAL DAY
 
-    final todayData = matchingData.isNotEmpty ? matchingData.first : null;
+    // IMPORTANT:
+    // This is calculated using:
+    // Firebase Tithi ID
+    // +
+    // Today's weekday
 
-    // ============================================================
-    // TITHI
-    // ============================================================
+    final goodBadDay = tithiId == null
+        ? 'Not Available'
+        : _getGoodBadNormalDay(tithiId: tithiId, date: today);
 
-    // Tithi is now taken from repository instead of calculation function.
-    final tithiName = todayData?.tithi ?? 'Not Available';
-
-    //COMMENTED
-    //
-    // final tithiNumber =
-    //     PaccakhanTimeUtils.calculateTithiNumber(today);
-    //
-    // final tithiName =
-    //     PaccakhanTimeUtils.calculateTithiName(today);
-
-    // ============================================================
-    // CONSOLE
-    // ============================================================
-
-    print('------------------------------------------');
-    print('Today Date      : $todayString');
-
-    // CHANGED:
-    // Tithi comes from repository.
-    print('Tithi Name      : $tithiName');
-
-    // OLD:
-    // print('Tithi Number    : $tithiNumber');
-
-    print('Good/Bad Day    : ${todayData?.goodBadDay ?? "Not Available"}');
-    print('------------------------------------------');
-
-    // ============================================================
+    // ==========================================================
     // DAY COLOR
-    // ============================================================
+    // ==========================================================
 
-    final dayColor = _getDayColor(todayData?.goodBadDay);
-
-    // ============================================================
-    // SUNRISE & SUNSET
-    // ============================================================
+    final dayColor = _getDayColor(goodBadDay);
 
     final solarResult = PaccakhanTimeUtils.calculateSunriseSunset(
       date: today,
@@ -79,22 +304,14 @@ class HomeScreen extends StatelessWidget {
     );
 
     final sunrise = solarResult['sunrise']!;
+
     final sunset = solarResult['sunset']!;
-
-    print('Sunrise        : $sunrise');
-    print('Sunset         : $sunset');
-
-    // ============================================================
-    // DAY LENGTH
-    // ============================================================
 
     final dayLength = PaccakhanTimeUtils.calculateDayLength(sunrise, sunset);
 
-    print('Day Length     : ${_formatDuration(dayLength)}');
-
-    // ============================================================
+    // ==========================================================
     // PACCAKHAN TIMINGS
-    // ============================================================
+    // ==========================================================
 
     final navkarshi = PaccakhanTimeUtils.calculateNavkarshi(
       sunrise,
@@ -115,15 +332,9 @@ class HomeScreen extends StatelessWidget {
 
     final avaddha = PaccakhanTimeUtils.calculateAvaddha(sunrise, dayLength);
 
-    print('Navkarshi      : ${_formatTime24(navkarshi)}');
-    print('Porasi         : ${_formatTime24(porasi)}');
-    print('Saddporasi     : ${_formatTime24(saddporasi)}');
-    print('Purimaddha     : ${_formatTime24(purimaddha)}');
-    print('Avaddha        : ${_formatTime24(avaddha)}');
-
-    // ============================================================
-    // UPCOMING PACCAKHAN
-    // ============================================================
+    // ==========================================================
+    // CURRENT TIME
+    // ==========================================================
 
     final currentTime = DateTime.now();
 
@@ -135,10 +346,11 @@ class HomeScreen extends StatelessWidget {
       purimaddha,
       avaddha,
     );
-
-    // ============================================================
-    // UI
-    // ============================================================
+    print('------------------------------------------');
+    print('Today Date      : $todayString');
+    print('Firestore Tithi : $tithiName');
+    print('Firestore ID    : $idString');
+    print('Calculated Day  : $goodBadDay');
 
     return Scaffold(
       appBar: AppBar(
@@ -162,22 +374,34 @@ class HomeScreen extends StatelessWidget {
 
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(8),
+
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+
           children: [
-            // ====================================================
+            // ==================================================
             // TODAY'S PACCAKHAN CARD
-            // ====================================================
+            // ==================================================
             Card(
               elevation: 3,
               color: dayColor,
+
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(28),
+
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+
                 child: Column(
                   children: [
+                    // ==========================================
+                    // TITLE
+                    // ==========================================
                     const Text(
                       "Today's Paccakhan",
+
                       style: TextStyle(
                         fontSize: 22,
                         color: Colors.white,
@@ -185,15 +409,20 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
 
+                    // ==========================================
+                    // DATE + DAY
+                    // ==========================================
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
+
                       children: [
                         Text(
                           _formatDisplayDate(today),
+
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 18,
                             color: Colors.white,
                           ),
                         ),
@@ -202,46 +431,49 @@ class HomeScreen extends StatelessWidget {
 
                         Text(
                           _getDayName(today),
+
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 18,
                             color: Colors.white,
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
 
-                    // ==================================================
-                    // CHANGED:
-                    // TITHI IS DISPLAYED FROM REPOSITORY
-                    // ==================================================
-                    Text(
-                      tithiName,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    // ==========================================
+                    // TITHI
+                    //
+                    // FIREBASE
+                    // ==========================================
+                    _isFirebaseLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
 
-                    const SizedBox(height: 8),
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            tithiName,
 
-                    // Optional: show Good/Bad/Normal Day
-                    Text(
-                      todayData?.goodBadDay ?? 'Not Available',
-                      style: const TextStyle(fontSize: 16, color: Colors.white),
-                    ),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+
+                    const SizedBox(height: 5),
                   ],
                 ),
               ),
             ),
 
             const SizedBox(height: 8),
-
-            // ====================================================
-            // SUNRISE / SUNSET
-            // ====================================================
             Row(
               children: [
                 Expanded(
@@ -268,89 +500,66 @@ class HomeScreen extends StatelessWidget {
 
             const Text(
               'Paccakhan Timings',
+
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 8),
 
-            // ====================================================
-            // DAY LENGTH
-            // ====================================================
             _paccakhanTile('Day Length', _formatDuration(dayLength), false),
 
-            // ====================================================
-            // NAVKARSHI
-            // ====================================================
             _paccakhanTile(
               'Navkarshi',
               _formatTime(navkarshi),
               comingPaccakhan == 'Navkarshi',
             ),
 
-            // ====================================================
-            // PORASI
-            // ====================================================
             _paccakhanTile(
               'Porasi',
               _formatTime(porasi),
               comingPaccakhan == 'Porasi',
             ),
 
-            // ====================================================
-            // SADD PORASI
-            // ====================================================
             _paccakhanTile(
               'Saddporasi',
               _formatTime(saddporasi),
               comingPaccakhan == 'Saddporasi',
             ),
 
-            // ====================================================
-            // PURIMADDHA
-            // ====================================================
             _paccakhanTile(
               'Purimaddha',
               _formatTime(purimaddha),
               comingPaccakhan == 'Purimaddha',
             ),
 
-            // ====================================================
-            // AVADDHA
-            // ====================================================
             _paccakhanTile(
               'Avaddha',
               _formatTime(avaddha),
               comingPaccakhan == 'Avaddha',
             ),
+
+            const SizedBox(height: 10),
           ],
         ),
       ),
     );
   }
 
-  // ==============================================================
-  // GOOD / BAD / NORMAL DAY COLOR
-  // ==============================================================
-
   Color _getDayColor(String? dayType) {
-    switch (dayType) {
-      case 'Good Day':
+    switch (dayType?.trim().toLowerCase()) {
+      case 'good day':
         return Colors.green;
 
-      case 'Bad Day':
+      case 'bad day':
         return Colors.red;
 
-      case 'Normal Day':
+      case 'normal day':
         return Colors.blue;
 
       default:
         return Colors.grey;
     }
   }
-
-  // ==============================================================
-  // FIND COMING PACCAKHAN
-  // ==============================================================
 
   String? _getComingPaccakhan(
     DateTime now,
@@ -381,10 +590,6 @@ class HomeScreen extends StatelessWidget {
     return upcoming.first.key;
   }
 
-  // ==============================================================
-  // SUNRISE / SUNSET CARD
-  // ==============================================================
-
   Widget _timeCard({
     required String title,
     required String time,
@@ -392,14 +597,17 @@ class HomeScreen extends StatelessWidget {
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+
       decoration: BoxDecoration(
         color: Colors.orangeAccent,
         borderRadius: BorderRadius.circular(12),
       ),
+
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
+
             children: [
               Icon(icon, size: 18),
 
@@ -407,6 +615,7 @@ class HomeScreen extends StatelessWidget {
 
               Text(
                 title,
+
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -419,6 +628,7 @@ class HomeScreen extends StatelessWidget {
 
           Text(
             time,
+
             style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
           ),
         ],
@@ -426,50 +636,38 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // ==============================================================
-  // PACCAKHAN TILE
-  // ==============================================================
-
   Widget _paccakhanTile(String name, String time, bool isComing) {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
+
       color: isComing ? Colors.orangeAccent : null,
+
       child: ListTile(
         leading: Icon(Icons.access_time, color: isComing ? Colors.white : null),
 
         title: Text(
           name,
+
           style: TextStyle(
             fontWeight: FontWeight.w600,
+
             color: isComing ? Colors.white : null,
           ),
         ),
 
         trailing: Text(
           time,
+
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
+
             color: isComing ? Colors.white : null,
           ),
         ),
       ),
     );
   }
-
-  // ==============================================================
-  // FORMAT DATE FOR REPOSITORY
-  // ==============================================================
-
-  String _formatDate(DateTime date) {
-    return '${date.year}-'
-        '${date.month.toString().padLeft(2, '0')}-'
-        '${date.day.toString().padLeft(2, '0')}';
-  }
-
-  // ==============================================================
-  // DISPLAY DATE
-  // ==============================================================
 
   String _formatDisplayDate(DateTime date) {
     const months = [
@@ -492,10 +690,6 @@ class HomeScreen extends StatelessWidget {
         '${date.year}';
   }
 
-  // ==============================================================
-  // FORMAT TIME
-  // ==============================================================
-
   String _formatTime(DateTime time) {
     int hour = time.hour;
 
@@ -514,19 +708,11 @@ class HomeScreen extends StatelessWidget {
     return '$hour:$minute $period';
   }
 
-  // ==============================================================
-  // FORMAT 24 HOUR TIME
-  // ==============================================================
-
   String _formatTime24(DateTime time) {
     return '${time.hour.toString().padLeft(2, '0')}:'
         '${time.minute.toString().padLeft(2, '0')}:'
         '${time.second.toString().padLeft(2, '0')}';
   }
-
-  // ==============================================================
-  // FORMAT DAY LENGTH
-  // ==============================================================
 
   String _formatDuration(Duration duration) {
     final hours = duration.inHours;
@@ -535,10 +721,6 @@ class HomeScreen extends StatelessWidget {
 
     return '$hours hr $minutes min';
   }
-
-  // ==============================================================
-  // DAY NAME
-  // ==============================================================
 
   String _getDayName(DateTime date) {
     const days = [

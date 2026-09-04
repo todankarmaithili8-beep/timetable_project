@@ -1,0 +1,21 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "timetable-project-d7923",
+          "appId": "1:439548860123:android:dcc2f752ad8441a5265efe",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "timetable-project-d7923",
+          "configurations": {
+            "android": "1:439548860123:android:dcc2f752ad8441a5265efe"
+          }
+        }
+      }
+    }
+  }
+}

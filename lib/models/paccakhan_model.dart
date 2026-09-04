@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class PaccakhanModel {
   final String date;
   final String sunrise;
@@ -46,18 +48,39 @@ class PaccakhanModel {
 
   factory PaccakhanModel.fromMap(Map<String, dynamic> map) {
     return PaccakhanModel(
-      date: map['date'],
-      sunrise: map['sunrise'],
-      sunset: map['sunset'],
-      daylength: map['daylength'],
-      navkarshi: map['navkarshi'],
-      porsi: map['porsi'],
-      sadhporsi: map['sadhporsi'],
-      purimaddha: map['purimaddha'],
-      avaddh: map['avaddh'],
-      tithi: map['tithi'],
-      day: map['day'],
-      goodBadDay: map['goodbadday'],
+      date: map['date']?.toString() ?? '',
+      sunrise: map['sunrise']?.toString() ?? '',
+      sunset: map['sunset']?.toString() ?? '',
+      daylength: map['daylength']?.toString() ?? '',
+      navkarshi: map['navkarshi']?.toString() ?? '',
+      porsi: map['porsi']?.toString() ?? '',
+      sadhporsi: map['sadhporsi']?.toString() ?? '',
+      purimaddha: map['purimaddha']?.toString() ?? '',
+      avaddh: map['avaddh']?.toString() ?? '',
+      tithi: map['tithi']?.toString() ?? '',
+      day: map['day']?.toString() ?? '',
+      goodBadDay: map['goodbadday']?.toString() ?? '',
+    );
+  }
+
+  factory PaccakhanModel.fromFirestore(
+    DocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = doc.data()!;
+
+    return PaccakhanModel(
+      date: data['date']?.toString() ?? '',
+      sunrise: data['sunrise']?.toString() ?? '',
+      sunset: data['sunset']?.toString() ?? '',
+      daylength: data['daylength']?.toString() ?? '',
+      navkarshi: data['navkarshi']?.toString() ?? '',
+      porsi: data['porsi']?.toString() ?? '',
+      sadhporsi: data['sadhporsi']?.toString() ?? '',
+      purimaddha: data['purimaddha']?.toString() ?? '',
+      avaddh: data['avaddh']?.toString() ?? '',
+      tithi: data['tithi']?.toString() ?? '',
+      day: data['day']?.toString() ?? '',
+      goodBadDay: data['goodbadday']?.toString() ?? '',
     );
   }
 }

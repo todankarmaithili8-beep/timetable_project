@@ -17,78 +17,27 @@ class PaccakhanTimeUtils {
     required double longitude,
     required double timeZone,
   }) {
-    // ------------------------------------------------------------
-    // 1. Calculate Day of Year
-    // ------------------------------------------------------------
-
     final startOfYear = DateTime(date.year, 1, 1);
-
     final dayOfYear = date.difference(startOfYear).inDays + 1;
-
-    // ------------------------------------------------------------
-    // 2. Solar Declination
-    // ------------------------------------------------------------
-
     final solarDeclination = _calculateSolarDeclination(dayOfYear);
-
-    // ------------------------------------------------------------
-    // 3. Equation of Time
-    // ------------------------------------------------------------
-
     final equationOfTime = _calculateEquationOfTime(dayOfYear);
-
-    // ------------------------------------------------------------
-    // 4. Hour Angle
-    // ------------------------------------------------------------
-
     final latitudeRad = _toRadians(latitude);
-
     final declinationRad = _toRadians(solarDeclination);
-
     const solarZenith = 90.833;
-
     final solarZenithRad = _toRadians(solarZenith);
-
     final cosHourAngle =
         (cos(solarZenithRad) - sin(latitudeRad) * sin(declinationRad)) /
         (cos(latitudeRad) * cos(declinationRad));
-
     final clampedCosHourAngle = cosHourAngle.clamp(-1.0, 1.0);
-
     final hourAngle = _toDegrees(acos(clampedCosHourAngle));
-
-    // ------------------------------------------------------------
-    // 5. Solar Noon
-    // ------------------------------------------------------------
-
     final solarNoon = 12 + timeZone - (longitude / 15) - (equationOfTime / 60);
-
-    // ------------------------------------------------------------
-    // 6. Sunrise
-    // ------------------------------------------------------------
-
     final sunriseHours = solarNoon - (hourAngle / 15);
-
-    // ------------------------------------------------------------
-    // 7. Sunset
-    // ------------------------------------------------------------
-
     final sunsetHours = solarNoon + (hourAngle / 15);
-
-    // ------------------------------------------------------------
-    // 8. Convert decimal hours to DateTime
-    // ------------------------------------------------------------
-
     final sunrise = _decimalHoursToDateTime(date, sunriseHours);
-
     final sunset = _decimalHoursToDateTime(date, sunsetHours);
 
     return {'sunrise': sunrise, 'sunset': sunset};
   }
-
-  // ============================================================
-  // SOLAR DECLINATION
-  // ============================================================
 
   static double _calculateSolarDeclination(int dayOfYear) {
     final angle = _toRadians((360 / 365) * (284 + dayOfYear));
@@ -96,19 +45,11 @@ class PaccakhanTimeUtils {
     return 23.45 * sin(angle);
   }
 
-  // ============================================================
-  // EQUATION OF TIME
-  // ============================================================
-
   static double _calculateEquationOfTime(int dayOfYear) {
     final b = _toRadians((360 / 365) * (dayOfYear - 81));
 
     return 9.87 * sin(2 * b) - 7.53 * cos(b) - 1.5 * sin(b);
   }
-
-  // ============================================================
-  // CONVERT DECIMAL HOURS TO DATETIME
-  // ============================================================
 
   static DateTime _decimalHoursToDateTime(DateTime date, double decimalHours) {
     int hours = decimalHours.floor();
@@ -125,7 +66,6 @@ class PaccakhanTimeUtils {
       minutes++;
     }
 
-    // Handle 60 minutes
     if (minutes >= 60) {
       minutes = 0;
       hours++;
@@ -134,10 +74,6 @@ class PaccakhanTimeUtils {
     return DateTime(date.year, date.month, date.day, hours, minutes, seconds);
   }
 
-  // ============================================================
-  // ANGLE CONVERSION
-  // ============================================================
-
   static double _toRadians(double degrees) {
     return degrees * pi / 180;
   }
@@ -145,10 +81,6 @@ class PaccakhanTimeUtils {
   static double _toDegrees(double radians) {
     return radians * 180 / pi;
   }
-
-  // ============================================================
-  // PACCAKHAN TIME CALCULATIONS
-  // ============================================================
 
   static Duration calculateDayLength(DateTime sunrise, DateTime sunset) {
     return sunset.difference(sunrise);
@@ -294,7 +226,6 @@ class PaccakhanTimeUtils {
 
     int index = (12 + days) % 30;
 
-    // Handle dates before 01 Jan 2026
     if (index < 0) {
       index += 30;
     }
