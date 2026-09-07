@@ -1,10 +1,10 @@
 import 'package:timetable_project/models/paccakhan_model.dart';
-import 'package:timetable_project/core/utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PaccakhanRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  /// Fetch Tithi, ID, Latitude and Longitude from Firebase
   Future<Map<String, dynamic>?> getTithiAndDayType(String date) async {
     try {
       final document = await _firestore.collection('paccakhan').doc(date).get();
@@ -18,6 +18,11 @@ class PaccakhanRepository {
 
       print('Firebase data for $date: $data');
 
+      print('Tithi     : ${data?['Tithi']}');
+      print('ID        : ${data?['id']}');
+      print('Latitude  : ${data?['latitude']}');
+      print('Longitude : ${data?['longitude']}');
+
       return data;
     } catch (e) {
       print('Firestore error: $e');
@@ -25,6 +30,7 @@ class PaccakhanRepository {
     }
   }
 
+  /// Fetch all Panchang data
   Future<List<PaccakhanModel>> getAllPanchang() async {
     final snapshot = await _firestore
         .collection('paccakhan')

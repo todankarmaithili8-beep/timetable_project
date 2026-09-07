@@ -16,10 +16,12 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _firebaseTithi;
   String? _firebaseId;
 
+  // Latitude and Longitude from Firebase
+  double? _firebaseLatitude;
+  double? _firebaseLongitude;
+
   bool _isFirebaseLoading = true;
 
-  static const double latitude = 16.99;
-  static const double longitude = 73.31;
   static const double timeZone = 5.5;
 
   @override
@@ -27,10 +29,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
 
     final now = DateTime.now();
-
     final today = DateTime(now.year, now.month, now.day);
 
-    // Fetch today's Tithi + ID from Firebase
+    // Fetch today's Firebase data
     _fetchFirebaseData(today);
   }
 
@@ -41,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ============================================================
-  // FETCH TITHI + ID FROM FIREBASE
+  // FETCH TITHI + ID + LATITUDE + LONGITUDE FROM FIREBASE
   // ============================================================
 
   Future<void> _fetchFirebaseData(DateTime date) async {
@@ -57,25 +58,63 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) {
         return;
       }
+
       if (firebaseData != null) {
         print('Firestore data: $firebaseData');
+
+        // ------------------------------------------------------
+        // TITHI
+        // ------------------------------------------------------
+
         final tithi = firebaseData['Tithi']?.toString().trim();
+
+        // ------------------------------------------------------
+        // TITHI ID
+        // ------------------------------------------------------
+
         final id = firebaseData['id']?.toString().trim();
-        print('Firestore Tithi: $tithi');
-        print('Firestore ID   : $id');
+
+        // ------------------------------------------------------
+        // LATITUDE FROM FIREBASE
+        // ------------------------------------------------------
+
+        final latitude = double.tryParse(
+          firebaseData['latitude']?.toString() ?? '',
+        );
+
+        // ------------------------------------------------------
+        // LONGITUDE FROM FIREBASE
+        // ------------------------------------------------------
+
+        final longitude = double.tryParse(
+          firebaseData['longitude']?.toString() ?? '',
+        );
+
+        print('Firestore Tithi     : $tithi');
+        print('Firestore ID        : $id');
+        print('Firestore Latitude  : $latitude');
+        print('Firestore Longitude : $longitude');
 
         setState(() {
+          // Tithi
           if (tithi != null && tithi.isNotEmpty) {
             _firebaseTithi = tithi;
           } else {
             _firebaseTithi = null;
           }
 
+          // Tithi ID
           if (id != null && id.isNotEmpty) {
             _firebaseId = id;
           } else {
             _firebaseId = null;
           }
+
+          // Latitude
+          _firebaseLatitude = latitude;
+
+          // Longitude
+          _firebaseLongitude = longitude;
 
           _isFirebaseLoading = false;
         });
@@ -89,6 +128,11 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _firebaseTithi = null;
           _firebaseId = null;
+
+          // Reset location also
+          _firebaseLatitude = null;
+          _firebaseLongitude = null;
+
           _isFirebaseLoading = false;
         });
       }
@@ -106,18 +150,18 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _firebaseTithi = null;
         _firebaseId = null;
+
+        // Reset location also
+        _firebaseLatitude = null;
+        _firebaseLongitude = null;
+
         _isFirebaseLoading = false;
       });
     }
   }
 
+  // ============================================================
   // GOOD / BAD / NORMAL DAY LOGIC
-  // id = Tithi ID
-  // Table:
-  // Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday
-  // 1 = Good Day
-  // 2 = Bad Day
-  // 3 = Normal Day
   // ============================================================
 
   String _getGoodBadNormalDay({required int tithiId, required DateTime date}) {
@@ -125,7 +169,6 @@ class _HomeScreenState extends State<HomeScreen> {
       return 'Not Available';
     }
 
-    // WEEKDAY
     // Sunday    = 0
     // Monday    = 1
     // Tuesday   = 2
@@ -133,7 +176,6 @@ class _HomeScreenState extends State<HomeScreen> {
     // Thursday  = 4
     // Friday    = 5
     // Saturday  = 6
-    // ----------------------------------------------------------
 
     final weekdayIndex = date.weekday % 7;
 
@@ -141,91 +183,53 @@ class _HomeScreenState extends State<HomeScreen> {
     // Sun Mon Tue Wed Thu Fri Sat
 
     const table = [
-      // --------------------------------------------------------
       // Tithi 1 - Pratipada
-      // --------------------------------------------------------
       [2, 3, 2, 3, 3, 1, 3],
 
-      // --------------------------------------------------------
       // Tithi 2 - Dwitiya
-      // --------------------------------------------------------
       [3, 2, 3, 1, 2, 3, 3],
 
-      // --------------------------------------------------------
       // Tithi 3 - Tritiya
-      // --------------------------------------------------------
       [3, 3, 1, 2, 3, 3, 3],
 
-      // --------------------------------------------------------
       // Tithi 4 - Chaturthi
-      // --------------------------------------------------------
       [3, 3, 3, 3, 3, 2, 1],
 
-      // --------------------------------------------------------
       // Tithi 5 - Panchami
-      // --------------------------------------------------------
       [3, 3, 3, 3, 1, 3, 2],
 
-      // --------------------------------------------------------
       // Tithi 6 - Shashthi
-      // --------------------------------------------------------
       [2, 3, 2, 3, 3, 1, 3],
 
-      // --------------------------------------------------------
       // Tithi 7 - Saptami
-      // --------------------------------------------------------
       [3, 2, 3, 1, 2, 3, 3],
 
-      // --------------------------------------------------------
       // Tithi 8 - Ashtami
-      // --------------------------------------------------------
       [3, 3, 1, 2, 3, 3, 3],
 
-      // --------------------------------------------------------
       // Tithi 9 - Navami
-      // --------------------------------------------------------
       [3, 3, 3, 3, 3, 2, 1],
 
-      // --------------------------------------------------------
       // Tithi 10 - Dashami
-      // --------------------------------------------------------
       [3, 3, 3, 3, 1, 3, 2],
 
-      // --------------------------------------------------------
       // Tithi 11 - Ekadashi
-      // --------------------------------------------------------
       [2, 3, 2, 3, 3, 1, 3],
 
-      // --------------------------------------------------------
       // Tithi 12 - Dwadashi
-      // --------------------------------------------------------
       [3, 2, 3, 1, 2, 3, 3],
 
-      // --------------------------------------------------------
       // Tithi 13 - Trayodashi
-      // --------------------------------------------------------
       [3, 3, 1, 2, 3, 3, 3],
 
-      // --------------------------------------------------------
       // Tithi 14 - Chaturdashi
-      // --------------------------------------------------------
       [3, 3, 3, 3, 3, 2, 1],
 
-      // --------------------------------------------------------
       // Tithi 15 - Purnima
-      // --------------------------------------------------------
       [3, 3, 3, 3, 1, 3, 2],
     ];
 
-    // ----------------------------------------------------------
-    // GET VALUE FROM TABLE
-    // ----------------------------------------------------------
-
     final value = table[tithiId - 1][weekdayIndex];
-
-    // ----------------------------------------------------------
-    // CONVERT 1 / 2 / 3 TO DAY TYPE
-    // ----------------------------------------------------------
 
     switch (value) {
       case 1:
@@ -251,16 +255,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final todayString = _formatDate(today);
 
     final tithiName = _firebaseTithi ?? 'Not Available';
+
     final idString = _firebaseId ?? 'Not Available';
+
     final tithiId = int.tryParse(idString);
 
+    // ==========================================================
     // GOOD / BAD / NORMAL DAY
-
-    // IMPORTANT:
-    // This is calculated using:
-    // Firebase Tithi ID
-    // +
-    // Today's weekday
+    // ==========================================================
 
     final goodBadDay = tithiId == null
         ? 'Not Available'
@@ -272,30 +274,78 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final dayColor = _getDayColor(goodBadDay);
 
+    // ==========================================================
+    // WAIT FOR FIREBASE LATITUDE / LONGITUDE
+    // ==========================================================
+
+    if (_firebaseLatitude == null || _firebaseLongitude == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Paccakhan Timetable',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // ==========================================================
+    // SUNRISE / SUNSET
+    // USING LATITUDE + LONGITUDE FROM FIREBASE
+    // ==========================================================
+
     final solarResult = PaccakhanTimeUtils.calculateSunriseSunset(
       date: today,
-      latitude: latitude,
-      longitude: longitude,
+
+      // Firebase latitude
+      latitude: _firebaseLatitude!,
+
+      // Firebase longitude
+      longitude: _firebaseLongitude!,
+
       timeZone: timeZone,
     );
 
     final sunrise = solarResult['sunrise']!;
+
     final sunset = solarResult['sunset']!;
+
     final dayLength = PaccakhanTimeUtils.calculateDayLength(sunrise, sunset);
+
     final navkarshi = PaccakhanTimeUtils.calculateNavkarshi(
       sunrise,
       const Duration(minutes: 48),
     );
+
     final porasi = PaccakhanTimeUtils.calculatePorasi(sunrise, dayLength);
+
     final saddporasi = PaccakhanTimeUtils.calculateSaddporasi(
       sunrise,
       dayLength,
     );
+
     final purimaddha = PaccakhanTimeUtils.calculatePurimaddha(
       sunrise,
       dayLength,
     );
+
     final avaddha = PaccakhanTimeUtils.calculateAvaddha(sunrise, dayLength);
+
     final currentTime = DateTime.now();
 
     final comingPaccakhan = _getComingPaccakhan(
@@ -306,11 +356,14 @@ class _HomeScreenState extends State<HomeScreen> {
       purimaddha,
       avaddha,
     );
+
     print('------------------------------------------');
-    print('Today Date      : $todayString');
-    print('Firestore Tithi : $tithiName');
-    print('Firestore ID    : $idString');
-    print('Calculated Day  : $goodBadDay');
+    print('Today Date       : $todayString');
+    print('Firestore Tithi  : $tithiName');
+    print('Firestore ID     : $idString');
+    print('Firebase Latitude: $_firebaseLatitude');
+    print('Firebase Longitude: $_firebaseLongitude');
+    print('Calculated Day   : $goodBadDay');
 
     return Scaffold(
       appBar: AppBar(
@@ -339,6 +392,9 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
 
           children: [
+            // ==================================================
+            // TODAY'S PACCAKHAN
+            // ==================================================
             Card(
               elevation: 3,
               color: dayColor,
@@ -364,6 +420,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
 
                     const SizedBox(height: 10),
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
 
@@ -396,7 +453,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ? const SizedBox(
                             height: 20,
                             width: 20,
-
                             child: CircularProgressIndicator(
                               color: Colors.white,
                               strokeWidth: 2,
@@ -419,6 +475,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
 
             const SizedBox(height: 8),
+
+            // ==================================================
+            // SUNRISE / SUNSET
+            // ==================================================
             Row(
               children: [
                 Expanded(
@@ -490,6 +550,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // ============================================================
+  // DAY COLOR
+  // ============================================================
+
   Color _getDayColor(String? dayType) {
     switch (dayType?.trim().toLowerCase()) {
       case 'good day':
@@ -505,6 +569,10 @@ class _HomeScreenState extends State<HomeScreen> {
         return Colors.grey;
     }
   }
+
+  // ============================================================
+  // COMING PACCAKHAN
+  // ============================================================
 
   String? _getComingPaccakhan(
     DateTime now,
@@ -534,6 +602,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return upcoming.first.key;
   }
+
+  // ============================================================
+  // TIME CARD
+  // ============================================================
 
   Widget _timeCard({
     required String title,
@@ -581,6 +653,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // ============================================================
+  // PACCAKHAN TILE
+  // ============================================================
+
   Widget _paccakhanTile(String name, String time, bool isComing) {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
@@ -595,7 +671,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
           style: TextStyle(
             fontWeight: FontWeight.w600,
-
             color: isComing ? Colors.white : null,
           ),
         ),
@@ -606,13 +681,16 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-
             color: isComing ? Colors.white : null,
           ),
         ),
       ),
     );
   }
+
+  // ============================================================
+  // DISPLAY DATE
+  // ============================================================
 
   String _formatDisplayDate(DateTime date) {
     const months = [
@@ -635,6 +713,10 @@ class _HomeScreenState extends State<HomeScreen> {
         '${date.year}';
   }
 
+  // ============================================================
+  // FORMAT TIME
+  // ============================================================
+
   String _formatTime(DateTime time) {
     int hour = time.hour;
 
@@ -653,11 +735,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return '$hour:$minute $period';
   }
 
-  String _formatTime24(DateTime time) {
-    return '${time.hour.toString().padLeft(2, '0')}:'
-        '${time.minute.toString().padLeft(2, '0')}:'
-        '${time.second.toString().padLeft(2, '0')}';
-  }
+  // ============================================================
+  // FORMAT DURATION
+  // ============================================================
 
   String _formatDuration(Duration duration) {
     final hours = duration.inHours;
@@ -666,6 +746,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return '$hours hr $minutes min';
   }
+
+  // ============================================================
+  // DAY NAME
+  // ============================================================
 
   String _getDayName(DateTime date) {
     const days = [

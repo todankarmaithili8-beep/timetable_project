@@ -18,6 +18,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
   String? _firebaseTithi;
   String? _firebaseId;
+  double? _firebaseLatitude;
+  double? _firebaseLongitude;
 
   // This will be calculated from:
   // Firebase Tithi ID + selected date weekday
@@ -25,23 +27,9 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
   bool _isFirebaseLoading = true;
 
-  // ============================================================
-  // RATNAGIRI LOCATION
-  // ============================================================
-
-  static const double latitude = 16.99;
-  static const double longitude = 73.31;
   static const double timeZone = 5.5;
 
-  // ============================================================
-  // SELECTED DATE
-  // ============================================================
-
   DateTime _selectedDate = DateTime.now();
-
-  // ============================================================
-  // INIT
-  // ============================================================
 
   @override
   void initState() {
@@ -78,6 +66,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
       _firebaseTithi = null;
       _firebaseId = null;
+      _firebaseLatitude = null;
+      _firebaseLongitude = null;
       _firebaseGoodBadDay = null;
     });
 
@@ -98,6 +88,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
       _firebaseTithi = null;
       _firebaseId = null;
+      _firebaseLatitude = null;
+      _firebaseLongitude = null;
       _firebaseGoodBadDay = null;
     });
 
@@ -120,6 +112,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
       _firebaseTithi = null;
       _firebaseId = null;
+      _firebaseLatitude = null;
+      _firebaseLongitude = null;
       _firebaseGoodBadDay = null;
     });
 
@@ -159,6 +153,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
       _firebaseTithi = null;
       _firebaseId = null;
+      _firebaseLatitude = null;
+      _firebaseLongitude = null;
       _firebaseGoodBadDay = null;
     });
 
@@ -247,7 +243,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
       // Tithi 5 - Panchami
       [3, 3, 3, 3, 1, 3, 2],
 
-      // Tithi 6 - Shashthi
+      // Tithi 6 - Sashti
       [2, 3, 2, 3, 3, 1, 3],
 
       // Tithi 7 - Saptami
@@ -344,6 +340,24 @@ class _TimetableScreenState extends State<TimetableScreen> {
         // ------------------------------------------------------
 
         final firebaseId = firebaseData['id']?.toString().trim();
+        // ------------------------------------------------------
+        // LATITUDE
+        // ------------------------------------------------------
+
+        final firebaseLatitude = double.tryParse(
+          firebaseData['latitude']?.toString() ?? '',
+        );
+
+        // ------------------------------------------------------
+        // LONGITUDE
+        // ------------------------------------------------------
+
+        final firebaseLongitude = double.tryParse(
+          firebaseData['longitude']?.toString() ?? '',
+        );
+
+        print('Firebase Latitude  : $firebaseLatitude');
+        print('Firebase Longitude : $firebaseLongitude');
 
         // ------------------------------------------------------
         // CONVERT ID TO INTEGER
@@ -388,6 +402,12 @@ class _TimetableScreenState extends State<TimetableScreen> {
           } else {
             _firebaseId = firebaseId;
           }
+
+          // Latitude
+          _firebaseLatitude = firebaseLatitude;
+
+          // Longitude
+          _firebaseLongitude = firebaseLongitude;
 
           // Good / Bad / Normal
           _firebaseGoodBadDay = calculatedDayType;
@@ -462,10 +482,14 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
     final displayDay = _getDayName(_selectedDate);
 
+    if (_firebaseLatitude == null || _firebaseLongitude == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     final solarResult = PaccakhanTimeUtils.calculateSunriseSunset(
       date: _selectedDate,
-      latitude: latitude,
-      longitude: longitude,
+      latitude: _firebaseLatitude!,
+      longitude: _firebaseLongitude!,
       timeZone: timeZone,
     );
 
