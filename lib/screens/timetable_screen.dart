@@ -12,10 +12,6 @@ class TimetableScreen extends StatefulWidget {
 class _TimetableScreenState extends State<TimetableScreen> {
   final PaccakhanRepository repository = PaccakhanRepository();
 
-  // ============================================================
-  // FIREBASE DATA
-  // ============================================================
-
   String? _firebaseTithi;
   String? _firebaseId;
   double? _firebaseLatitude;
@@ -42,19 +38,11 @@ class _TimetableScreenState extends State<TimetableScreen> {
     _fetchFirebaseData(_selectedDate);
   }
 
-  // ============================================================
-  // FORMAT DATE FOR FIREBASE
-  // ============================================================
-
   String _formatDate(DateTime date) {
     return '${date.year}-'
         '${date.month.toString().padLeft(2, '0')}-'
         '${date.day.toString().padLeft(2, '0')}';
   }
-
-  // ============================================================
-  // PREVIOUS DATE
-  // ============================================================
 
   void _goToPreviousDate() {
     final previousDate = _selectedDate.subtract(const Duration(days: 1));
@@ -73,10 +61,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
     _fetchFirebaseData(previousDate);
   }
-
-  // ============================================================
-  // NEXT DATE
-  // ============================================================
 
   void _goToNextDate() {
     final nextDate = _selectedDate.add(const Duration(days: 1));
@@ -299,11 +283,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
     }
   }
 
-  // ============================================================
-  // FETCH TITHI FROM FIREBASE
-
-  // Firebase ID + selected date weekday
-
   Future<void> _fetchFirebaseData(DateTime date) async {
     try {
       final dateString = _formatDate(date);
@@ -312,45 +291,22 @@ class _TimetableScreenState extends State<TimetableScreen> {
       print('Firebase fetching date: $dateString');
       print('========================================');
 
-      // --------------------------------------------------------
-      // GET DATA FROM FIRESTORE
-      // --------------------------------------------------------
-
       final firebaseData = await repository.getTithiAndDayType(dateString);
 
       if (!mounted) {
         return;
       }
 
-      // ========================================================
-      // FIREBASE DATA FOUND
-      // ========================================================
-
       if (firebaseData != null) {
         print('Firebase data for $dateString: $firebaseData');
 
-        // ------------------------------------------------------
-        // TITHI NAME
-        // ------------------------------------------------------
-
         final firebaseTithi = firebaseData['Tithi']?.toString().trim();
 
-        // ------------------------------------------------------
-        // TITHI ID
-        // ------------------------------------------------------
-
         final firebaseId = firebaseData['id']?.toString().trim();
-        // ------------------------------------------------------
-        // LATITUDE
-        // ------------------------------------------------------
 
         final firebaseLatitude = double.tryParse(
           firebaseData['latitude']?.toString() ?? '',
         );
-
-        // ------------------------------------------------------
-        // LONGITUDE
-        // ------------------------------------------------------
 
         final firebaseLongitude = double.tryParse(
           firebaseData['longitude']?.toString() ?? '',
@@ -358,10 +314,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
         print('Firebase Latitude  : $firebaseLatitude');
         print('Firebase Longitude : $firebaseLongitude');
-
-        // ------------------------------------------------------
-        // CONVERT ID TO INTEGER
-        // ------------------------------------------------------
 
         final int? tithiId = int.tryParse(firebaseId ?? '');
 
@@ -384,29 +336,21 @@ class _TimetableScreenState extends State<TimetableScreen> {
         print('Selected Day      : ${_getDayName(date)}');
         print('Calculated Day    : $calculatedDayType');
 
-        // ------------------------------------------------------
-        // UPDATE STATE
-        // ------------------------------------------------------
-
         setState(() {
-          // Tithi
           if (firebaseTithi == null || firebaseTithi.isEmpty) {
             _firebaseTithi = null;
           } else {
             _firebaseTithi = firebaseTithi;
           }
 
-          // Tithi ID
           if (firebaseId == null || firebaseId.isEmpty) {
             _firebaseId = null;
           } else {
             _firebaseId = firebaseId;
           }
 
-          // Latitude
           _firebaseLatitude = firebaseLatitude;
 
-          // Longitude
           _firebaseLongitude = firebaseLongitude;
 
           // Good / Bad / Normal
@@ -429,11 +373,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
           _isFirebaseLoading = false;
         });
       }
-    }
-    // ==========================================================
-    // FIREBASE ERROR
-    // ==========================================================
-    catch (e) {
+    } catch (e) {
       print('Firebase error: $e');
 
       if (!mounted) {
@@ -456,27 +396,11 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
     print('Current selected date: $selectedDateString');
 
-    // ==========================================================
-    // TITHI
-    // ==========================================================
-
     final tithiName = _firebaseTithi ?? 'Not Available';
-
-    // ==========================================================
-    // TITHI ID
-    // ==========================================================
 
     final id = _firebaseId ?? 'Not Available';
 
-    // ==========================================================
-    // GOOD / BAD / NORMAL DAY
-    // ==========================================================
-
     final goodBadDay = _firebaseGoodBadDay ?? 'Not Available';
-
-    // ==========================================================
-    // DISPLAY DATE
-    // ==========================================================
 
     final displayDate = _formatDisplayDate(_selectedDate);
 
@@ -522,7 +446,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
     String? comingPaccakhan;
 
-    // Highlight coming Paccakhan only for today
     if (_formatDate(_selectedDate) == _formatDate(now)) {
       comingPaccakhan = _getComingPaccakhan(
         now,
@@ -666,10 +589,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
                           ),
 
                     const SizedBox(height: 2),
-
-                    // ==========================================
-                    // GOOD / BAD / NORMAL DAY
-                    // ==========================================
                   ],
                 ),
               ),

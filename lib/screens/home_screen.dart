@@ -160,10 +160,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // ============================================================
-  // GOOD / BAD / NORMAL DAY LOGIC
-  // ============================================================
-
   String _getGoodBadNormalDay({required int tithiId, required DateTime date}) {
     if (tithiId < 1 || tithiId > 15) {
       return 'Not Available';
@@ -260,23 +256,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final tithiId = int.tryParse(idString);
 
-    // ==========================================================
-    // GOOD / BAD / NORMAL DAY
-    // ==========================================================
-
     final goodBadDay = tithiId == null
         ? 'Not Available'
         : _getGoodBadNormalDay(tithiId: tithiId, date: today);
 
-    // ==========================================================
-    // DAY COLOR
-    // ==========================================================
-
     final dayColor = _getDayColor(goodBadDay);
-
-    // ==========================================================
-    // WAIT FOR FIREBASE LATITUDE / LONGITUDE
-    // ==========================================================
 
     if (_firebaseLatitude == null || _firebaseLongitude == null) {
       return Scaffold(
@@ -303,11 +287,6 @@ class _HomeScreenState extends State<HomeScreen> {
         body: const Center(child: CircularProgressIndicator()),
       );
     }
-
-    // ==========================================================
-    // SUNRISE / SUNSET
-    // USING LATITUDE + LONGITUDE FROM FIREBASE
-    // ==========================================================
 
     final solarResult = PaccakhanTimeUtils.calculateSunriseSunset(
       date: today,
@@ -392,9 +371,6 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
 
           children: [
-            // ==================================================
-            // TODAY'S PACCAKHAN
-            // ==================================================
             Card(
               elevation: 3,
               color: dayColor,
@@ -476,9 +452,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 8),
 
-            // ==================================================
-            // SUNRISE / SUNSET
-            // ==================================================
             Row(
               children: [
                 Expanded(
@@ -550,10 +523,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ============================================================
-  // DAY COLOR
-  // ============================================================
-
   Color _getDayColor(String? dayType) {
     switch (dayType?.trim().toLowerCase()) {
       case 'good day':
@@ -569,10 +538,6 @@ class _HomeScreenState extends State<HomeScreen> {
         return Colors.grey;
     }
   }
-
-  // ============================================================
-  // COMING PACCAKHAN
-  // ============================================================
 
   String? _getComingPaccakhan(
     DateTime now,
@@ -602,10 +567,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return upcoming.first.key;
   }
-
-  // ============================================================
-  // TIME CARD
-  // ============================================================
 
   Widget _timeCard({
     required String title,
@@ -653,10 +614,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ============================================================
-  // PACCAKHAN TILE
-  // ============================================================
-
   Widget _paccakhanTile(String name, String time, bool isComing) {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
@@ -688,10 +645,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ============================================================
-  // DISPLAY DATE
-  // ============================================================
-
   String _formatDisplayDate(DateTime date) {
     const months = [
       'January',
@@ -713,10 +666,6 @@ class _HomeScreenState extends State<HomeScreen> {
         '${date.year}';
   }
 
-  // ============================================================
-  // FORMAT TIME
-  // ============================================================
-
   String _formatTime(DateTime time) {
     int hour = time.hour;
 
@@ -735,10 +684,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return '$hour:$minute $period';
   }
 
-  // ============================================================
-  // FORMAT DURATION
-  // ============================================================
-
   String _formatDuration(Duration duration) {
     final hours = duration.inHours;
 
@@ -746,10 +691,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return '$hours hr $minutes min';
   }
-
-  // ============================================================
-  // DAY NAME
-  // ============================================================
 
   String _getDayName(DateTime date) {
     const days = [
