@@ -1,8 +1,20 @@
 import 'package:flutter/material.dart';
-import 'privacy_policy_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
+
+  Future<void> _openPrivacyPolicy() async {
+    final Uri url = Uri.parse(
+      'http://www.gadreinfotech.com/mobile-app-privacy/',
+    );
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      throw 'Could not open Privacy Policy URL';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +54,7 @@ class AboutScreen extends StatelessWidget {
 
             const SizedBox(height: 8),
 
+            // APP DESCRIPTION
             const Text(
               'Daily Paccakhan timings based on sunrise and sunset.',
               textAlign: TextAlign.center,
@@ -54,13 +67,10 @@ class AboutScreen extends StatelessWidget {
 
             const SizedBox(height: 15),
 
-            // APP VERSION
             Row(
               children: [
                 const Icon(Icons.phone_android, size: 30, color: Colors.blue),
-
                 const SizedBox(width: 20),
-
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
@@ -83,13 +93,10 @@ class AboutScreen extends StatelessWidget {
 
             const SizedBox(height: 22),
 
-            // DEVELOPED BY
             Row(
               children: [
                 const Icon(Icons.business, size: 30, color: Colors.blue),
-
                 const SizedBox(width: 20),
-
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
@@ -116,7 +123,6 @@ class AboutScreen extends StatelessWidget {
 
             const SizedBox(height: 15),
 
-            // PROJECT OBJECTIVES
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(18),
@@ -131,9 +137,7 @@ class AboutScreen extends StatelessWidget {
                   Row(
                     children: const [
                       Icon(Icons.track_changes, color: Colors.blue, size: 30),
-
                       SizedBox(width: 12),
-
                       Text(
                         'Project Objectives',
                         style: TextStyle(
@@ -163,7 +167,6 @@ class AboutScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // PRIVACY POLICY
             Card(
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -193,13 +196,8 @@ class AboutScreen extends StatelessWidget {
 
                 trailing: const Icon(Icons.arrow_forward_ios, size: 17),
 
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const PrivacyPolicyScreen(),
-                    ),
-                  );
+                onTap: () async {
+                  await _openPrivacyPolicy();
                 },
               ),
             ),
@@ -211,6 +209,7 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
+  // PROJECT OBJECTIVE WIDGET
   static Widget _objective(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),

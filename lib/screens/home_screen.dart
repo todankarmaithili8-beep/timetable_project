@@ -15,8 +15,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String? _firebaseTithi;
   String? _firebaseId;
-
-  // Latitude and Longitude from Firebase
   double? _firebaseLatitude;
   double? _firebaseLongitude;
 
@@ -31,7 +29,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    // Fetch today's Firebase data
     _fetchFirebaseData(today);
   }
 
@@ -40,10 +37,6 @@ class _HomeScreenState extends State<HomeScreen> {
         '${date.month.toString().padLeft(2, '0')}-'
         '${date.day.toString().padLeft(2, '0')}';
   }
-
-  // ============================================================
-  // FETCH TITHI + ID + LATITUDE + LONGITUDE FROM FIREBASE
-  // ============================================================
 
   Future<void> _fetchFirebaseData(DateTime date) async {
     try {
@@ -62,29 +55,13 @@ class _HomeScreenState extends State<HomeScreen> {
       if (firebaseData != null) {
         print('Firestore data: $firebaseData');
 
-        // ------------------------------------------------------
-        // TITHI
-        // ------------------------------------------------------
-
         final tithi = firebaseData['Tithi']?.toString().trim();
 
-        // ------------------------------------------------------
-        // TITHI ID
-        // ------------------------------------------------------
-
         final id = firebaseData['id']?.toString().trim();
-
-        // ------------------------------------------------------
-        // LATITUDE FROM FIREBASE
-        // ------------------------------------------------------
 
         final latitude = double.tryParse(
           firebaseData['latitude']?.toString() ?? '',
         );
-
-        // ------------------------------------------------------
-        // LONGITUDE FROM FIREBASE
-        // ------------------------------------------------------
 
         final longitude = double.tryParse(
           firebaseData['longitude']?.toString() ?? '',
@@ -96,33 +73,25 @@ class _HomeScreenState extends State<HomeScreen> {
         print('Firestore Longitude : $longitude');
 
         setState(() {
-          // Tithi
           if (tithi != null && tithi.isNotEmpty) {
             _firebaseTithi = tithi;
           } else {
             _firebaseTithi = null;
           }
 
-          // Tithi ID
           if (id != null && id.isNotEmpty) {
             _firebaseId = id;
           } else {
             _firebaseId = null;
           }
 
-          // Latitude
           _firebaseLatitude = latitude;
 
-          // Longitude
           _firebaseLongitude = longitude;
 
           _isFirebaseLoading = false;
         });
-      }
-      // ========================================================
-      // FIRESTORE DATA NOT FOUND
-      // ========================================================
-      else {
+      } else {
         print('No Firestore data found for $dateString');
 
         setState(() {
@@ -136,11 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _isFirebaseLoading = false;
         });
       }
-    }
-    // ==========================================================
-    // FIRESTORE ERROR
-    // ==========================================================
-    catch (e) {
+    } catch (e) {
       print('Firestore error: $e');
 
       if (!mounted) {
@@ -291,10 +256,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final solarResult = PaccakhanTimeUtils.calculateSunriseSunset(
       date: today,
 
-      // Firebase latitude
       latitude: _firebaseLatitude!,
 
-      // Firebase longitude
       longitude: _firebaseLongitude!,
 
       timeZone: timeZone,

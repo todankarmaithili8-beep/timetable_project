@@ -16,9 +16,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
   String? _firebaseId;
   double? _firebaseLatitude;
   double? _firebaseLongitude;
-
-  // This will be calculated from:
-  // Firebase Tithi ID + selected date weekday
   String? _firebaseGoodBadDay;
 
   bool _isFirebaseLoading = true;
@@ -80,10 +77,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
     _fetchFirebaseData(nextDate);
   }
 
-  // ============================================================
-  // GO TO TODAY
-  // ============================================================
-
   void _goToToday() {
     final now = DateTime.now();
 
@@ -103,10 +96,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
     _fetchFirebaseData(today);
   }
-
-  // ============================================================
-  // SELECT DATE
-  // ============================================================
 
   Future<void> _selectDate() async {
     final pickedDate = await showDatePicker(
@@ -145,71 +134,12 @@ class _TimetableScreenState extends State<TimetableScreen> {
     _fetchFirebaseData(selectedDate);
   }
 
-  // ============================================================
-  // GOOD / BAD / NORMAL DAY LOGIC
-  // ============================================================
-  //
-  // Firebase gives:
-  //
-  // id = Tithi ID (1 to 15)
-  //
-  // Selected date gives:
-  //
-  // Sunday to Saturday
-  //
-  // Table value:
-  //
-  // 1 = Good Day
-  // 2 = Bad Day
-  // 3 = Normal Day
-  //
-  // ============================================================
-
   String _getGoodBadNormalDay({required int tithiId, required DateTime date}) {
-    // ----------------------------------------------------------
-    // TITHI ID MUST BE 1 TO 15
-    // ----------------------------------------------------------
-
     if (tithiId < 1 || tithiId > 15) {
       return 'Not Available';
     }
 
-    // ----------------------------------------------------------
-    // DART WEEKDAY
-    //
-    // Monday    = 1
-    // Tuesday   = 2
-    // Wednesday = 3
-    // Thursday  = 4
-    // Friday    = 5
-    // Saturday  = 6
-    // Sunday    = 7
-    //
-    // Our table starts with Sunday:
-    //
-    // Sunday    = 0
-    // Monday    = 1
-    // Tuesday   = 2
-    // Wednesday = 3
-    // Thursday  = 4
-    // Friday    = 5
-    // Saturday  = 6
-    // ----------------------------------------------------------
-
     final weekdayIndex = date.weekday % 7;
-
-    // ==========================================================
-    // TITHI × WEEKDAY TABLE
-    //
-    // Column order:
-    //
-    // Sunday, Monday, Tuesday, Wednesday,
-    // Thursday, Friday, Saturday
-    //
-    // 1 = Good Day
-    // 2 = Bad Day
-    // 3 = Normal Day
-    // ==========================================================
 
     const table = [
       // Tithi 1 - Pratipada
@@ -258,15 +188,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
       [3, 3, 3, 3, 1, 3, 2],
     ];
 
-    // ----------------------------------------------------------
-    // GET VALUE FROM TABLE
-    // ----------------------------------------------------------
-
     final value = table[tithiId - 1][weekdayIndex];
-
-    // ----------------------------------------------------------
-    // CONVERT NUMBER TO DAY TYPE
-    // ----------------------------------------------------------
 
     switch (value) {
       case 1:
@@ -320,10 +242,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
         print('Firebase Tithi    : $firebaseTithi');
         print('Firebase Tithi ID : $tithiId');
 
-        // ------------------------------------------------------
-        // CALCULATE GOOD / BAD / NORMAL DAY
-        // ------------------------------------------------------
-
         String? calculatedDayType;
 
         if (tithiId != null) {
@@ -353,16 +271,11 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
           _firebaseLongitude = firebaseLongitude;
 
-          // Good / Bad / Normal
           _firebaseGoodBadDay = calculatedDayType;
 
           _isFirebaseLoading = false;
         });
-      }
-      // ========================================================
-      // FIREBASE DATA NOT FOUND
-      // ========================================================
-      else {
+      } else {
         print('No Firebase data found for $dateString');
 
         setState(() {
@@ -565,9 +478,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
                     const SizedBox(height: 2),
 
-                    // ==========================================
-                    // TITHI
-                    // ==========================================
                     _isFirebaseLoading
                         ? const SizedBox(
                             height: 18,
