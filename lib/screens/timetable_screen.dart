@@ -100,10 +100,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
   Future<void> _selectDate() async {
     final pickedDate = await showDatePicker(
       context: context,
-
       firstDate: DateTime(2026, 1, 1),
       lastDate: DateTime(2026, 12, 31),
-
       initialDate: _selectedDate.year == 2026
           ? _selectedDate
           : DateTime(2026, 1, 1),
@@ -320,7 +318,10 @@ class _TimetableScreenState extends State<TimetableScreen> {
     final displayDay = _getDayName(_selectedDate);
 
     if (_firebaseLatitude == null || _firebaseLongitude == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     final solarResult = PaccakhanTimeUtils.calculateSunriseSunset(
@@ -373,6 +374,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
     final dayColor = _getDayColor(goodBadDay);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
           'Timetable',
@@ -380,24 +382,19 @@ class _TimetableScreenState extends State<TimetableScreen> {
         ),
         centerTitle: true,
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(8),
-
         child: Column(
           children: [
             Card(
               elevation: 3,
               color: dayColor,
-
               child: Container(
                 width: double.infinity,
-
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
                   vertical: 6,
                 ),
-
                 child: Column(
                   children: [
                     Row(
@@ -406,7 +403,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
                           child: Text(
                             'Paccakhan Timetable',
                             textAlign: TextAlign.center,
-
                             style: TextStyle(
                               fontSize: 18,
                               color: Colors.white,
@@ -414,47 +410,38 @@ class _TimetableScreenState extends State<TimetableScreen> {
                             ),
                           ),
                         ),
-
                         IconButton(
                           icon: const Icon(
                             Icons.calendar_month,
                             size: 24,
                             color: Colors.white,
                           ),
-
                           onPressed: _selectDate,
                         ),
                       ],
                     ),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-
                       children: [
                         IconButton(
                           onPressed: _goToPreviousDate,
-
                           icon: const Icon(
                             Icons.chevron_left,
                             color: Colors.white,
                             size: 20,
                           ),
                         ),
-
                         Column(
                           children: [
                             Text(
                               displayDate,
-
                               style: const TextStyle(
                                 fontSize: 16,
                                 color: Colors.white,
                               ),
                             ),
-
                             Text(
                               displayDay,
-
                               style: const TextStyle(
                                 fontSize: 16,
                                 color: Colors.white,
@@ -463,10 +450,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
                             ),
                           ],
                         ),
-
                         IconButton(
                           onPressed: _goToNextDate,
-
                           icon: const Icon(
                             Icons.chevron_right,
                             color: Colors.white,
@@ -475,14 +460,11 @@ class _TimetableScreenState extends State<TimetableScreen> {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 2),
-
                     _isFirebaseLoading
                         ? const SizedBox(
                             height: 18,
                             width: 18,
-
                             child: CircularProgressIndicator(
                               color: Colors.white,
                               strokeWidth: 2,
@@ -490,22 +472,18 @@ class _TimetableScreenState extends State<TimetableScreen> {
                           )
                         : Text(
                             tithiName,
-
                             style: const TextStyle(
                               fontSize: 18,
                               color: Colors.white,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-
                     const SizedBox(height: 2),
                   ],
                 ),
               ),
             ),
-
             const SizedBox(height: 7),
-
             Row(
               children: [
                 Expanded(
@@ -515,9 +493,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                     icon: Icons.sunny,
                   ),
                 ),
-
                 const SizedBox(width: 10),
-
                 Expanded(
                   child: _timeCard(
                     title: 'Sunset',
@@ -527,53 +503,41 @@ class _TimetableScreenState extends State<TimetableScreen> {
                 ),
               ],
             ),
-
             const SizedBox(height: 15),
-
             const Align(
               alignment: Alignment.centerLeft,
-
               child: Text(
                 'Paccakhan Timings',
-
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
-
             const SizedBox(height: 8),
-
             _paccakhanTile('Day Length', _formatDuration(dayLength), false),
-
             _paccakhanTile(
               'Navkarshi',
               _formatTime(navkarshi),
               comingPaccakhan == 'Navkarshi',
             ),
-
             _paccakhanTile(
               'Porsi',
               _formatTime(porsi),
               comingPaccakhan == 'Porsi',
             ),
-
             _paccakhanTile(
               'Sadhporsi',
               _formatTime(saddporsi),
               comingPaccakhan == 'Sadhporsi',
             ),
-
             _paccakhanTile(
               'Purimaddha',
               _formatTime(purimaddha),
               comingPaccakhan == 'Purimaddha',
             ),
-
             _paccakhanTile(
               'Avaddh',
               _formatTime(avaddh),
               comingPaccakhan == 'Avaddh',
             ),
-
             const SizedBox(height: 10),
           ],
         ),
@@ -633,27 +597,20 @@ class _TimetableScreenState extends State<TimetableScreen> {
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-
       decoration: BoxDecoration(
         color: Colors.orangeAccent,
         borderRadius: BorderRadius.circular(12),
       ),
-
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-
             children: [
               Icon(icon, size: 18),
-
               const SizedBox(width: 5),
-
               Text(
                 title,
-
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -661,12 +618,9 @@ class _TimetableScreenState extends State<TimetableScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 10),
-
           Text(
             time ?? '--',
-
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ],
@@ -677,24 +631,18 @@ class _TimetableScreenState extends State<TimetableScreen> {
   Widget _paccakhanTile(String name, String time, bool isComing) {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
-
       color: isComing ? Colors.orangeAccent : null,
-
       child: ListTile(
         leading: Icon(Icons.access_time, color: isComing ? Colors.white : null),
-
         title: Text(
           name,
-
           style: TextStyle(
             fontWeight: FontWeight.w600,
             color: isComing ? Colors.white : null,
           ),
         ),
-
         trailing: Text(
           time,
-
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,

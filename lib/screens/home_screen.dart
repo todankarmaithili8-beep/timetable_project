@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:timetable_project/repository/paccakhan_repository.dart';
 import 'package:timetable_project/core/utils.dart';
 import 'package:timetable_project/screens/settings_screen.dart';
+import 'package:timetable_project/services/notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -48,15 +49,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
       final firebaseData = await repository.getTithiAndDayType(dateString);
 
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       if (firebaseData != null) {
         print('Firestore data: $firebaseData');
 
         final tithi = firebaseData['Tithi']?.toString().trim();
-
         final id = firebaseData['id']?.toString().trim();
 
         final latitude = double.tryParse(
@@ -73,23 +71,17 @@ class _HomeScreenState extends State<HomeScreen> {
         print('Firestore Longitude : $longitude');
 
         setState(() {
-          if (tithi != null && tithi.isNotEmpty) {
-            _firebaseTithi = tithi;
-          } else {
-            _firebaseTithi = null;
-          }
+          _firebaseTithi = (tithi != null && tithi.isNotEmpty) ? tithi : null;
 
-          if (id != null && id.isNotEmpty) {
-            _firebaseId = id;
-          } else {
-            _firebaseId = null;
-          }
+          _firebaseId = (id != null && id.isNotEmpty) ? id : null;
 
           _firebaseLatitude = latitude;
-
           _firebaseLongitude = longitude;
-
           _isFirebaseLoading = false;
+        });
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scheduleNotificationFromFirebaseData();
         });
       } else {
         print('No Firestore data found for $dateString');
@@ -97,29 +89,21 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _firebaseTithi = null;
           _firebaseId = null;
-
-          // Reset location also
           _firebaseLatitude = null;
           _firebaseLongitude = null;
-
           _isFirebaseLoading = false;
         });
       }
     } catch (e) {
       print('Firestore error: $e');
 
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
         _firebaseTithi = null;
         _firebaseId = null;
-
-        // Reset location also
         _firebaseLatitude = null;
         _firebaseLongitude = null;
-
         _isFirebaseLoading = false;
       });
     }
@@ -130,64 +114,24 @@ class _HomeScreenState extends State<HomeScreen> {
       return 'Not Available';
     }
 
-    // Sunday    = 0
-    // Monday    = 1
-    // Tuesday   = 2
-    // Wednesday = 3
-    // Thursday  = 4
-    // Friday    = 5
-    // Saturday  = 6
-
     final weekdayIndex = date.weekday % 7;
 
-    // Column order:
-    // Sun Mon Tue Wed Thu Fri Sat
-
     const table = [
-      // Tithi 1 - Pratipada
       [2, 3, 2, 3, 3, 1, 3],
-
-      // Tithi 2 - Dwitiya
       [3, 2, 3, 1, 2, 3, 3],
-
-      // Tithi 3 - Tritiya
       [3, 3, 1, 2, 3, 3, 3],
-
-      // Tithi 4 - Chaturthi
       [3, 3, 3, 3, 3, 2, 1],
-
-      // Tithi 5 - Panchami
       [3, 3, 3, 3, 1, 3, 2],
-
-      // Tithi 6 - Shashthi
       [2, 3, 2, 3, 3, 1, 3],
-
-      // Tithi 7 - Saptami
       [3, 2, 3, 1, 2, 3, 3],
-
-      // Tithi 8 - Ashtami
       [3, 3, 1, 2, 3, 3, 3],
-
-      // Tithi 9 - Navami
       [3, 3, 3, 3, 3, 2, 1],
-
-      // Tithi 10 - Dashami
       [3, 3, 3, 3, 1, 3, 2],
-
-      // Tithi 11 - Ekadashi
       [2, 3, 2, 3, 3, 1, 3],
-
-      // Tithi 12 - Dwadashi
       [3, 2, 3, 1, 2, 3, 3],
-
-      // Tithi 13 - Trayodashi
       [3, 3, 1, 2, 3, 3, 3],
-
-      // Tithi 14 - Chaturdashi
       [3, 3, 3, 3, 3, 2, 1],
-
-      // Tithi 15 - Purnima
-      [3, 3, 3, 3, 1, 3, 2],
+      [3, 3, 3, 3, 1, 3, 3],
     ];
 
     final value = table[tithiId - 1][weekdayIndex];
@@ -195,15 +139,120 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (value) {
       case 1:
         return 'Good Day';
-
       case 2:
         return 'Bad Day';
-
       case 3:
         return 'Normal Day';
-
       default:
         return 'Not Available';
+    }
+  }
+
+  Future<void> _scheduleNotificationFromFirebaseData() async {
+    if (_firebaseLatitude == null || _firebaseLongitude == null) {
+      print('❌ Cannot schedule notification: latitude/longitude missing.');
+      return;
+    }
+
+    final now = DateTime.now();
+
+    final today = DateTime(now.year, now.month, now.day);
+
+    final solarResult = PaccakhanTimeUtils.calculateSunriseSunset(
+      date: today,
+      latitude: _firebaseLatitude!,
+      longitude: _firebaseLongitude!,
+      timeZone: timeZone,
+    );
+
+    final sunrise = solarResult['sunrise']!;
+    final sunset = solarResult['sunset']!;
+
+    final dayLength = PaccakhanTimeUtils.calculateDayLength(sunrise, sunset);
+
+    final navkarshi = PaccakhanTimeUtils.calculateNavkarshi(
+      sunrise,
+      const Duration(minutes: 48),
+    );
+
+    final porasi = PaccakhanTimeUtils.calculatePorasi(sunrise, dayLength);
+
+    final saddporasi = PaccakhanTimeUtils.calculateSaddporasi(
+      sunrise,
+      dayLength,
+    );
+
+    final purimaddha = PaccakhanTimeUtils.calculatePurimaddha(
+      sunrise,
+      dayLength,
+    );
+
+    final avaddha = PaccakhanTimeUtils.calculateAvaddha(sunrise, dayLength);
+
+    final timings = <String, DateTime>{
+      'Navkarshi': navkarshi,
+      'Porasi': porasi,
+      'Saddporasi': saddporasi,
+      'Purimaddha': purimaddha,
+      'Avaddha': avaddha,
+    };
+
+    final sortedTimings = timings.entries.toList()
+      ..sort((a, b) => a.value.compareTo(b.value));
+
+    MapEntry<String, DateTime>? selectedPaccakhan;
+
+    for (final entry in sortedTimings) {
+      final notificationTime = entry.value.subtract(
+        const Duration(minutes: 15),
+      );
+
+      print('------------------------------------------');
+      print('Paccakhan       : ${entry.key}');
+      print('Paccakhan Time  : ${entry.value}');
+      print('Notification At : $notificationTime');
+      print('Current Time    : $now');
+
+      if (notificationTime.isAfter(now)) {
+        selectedPaccakhan = entry;
+        break;
+      }
+    }
+
+    if (selectedPaccakhan == null) {
+      print('❌ No Paccakhan available for notification today.');
+      return;
+    }
+
+    final paccakhanName = selectedPaccakhan.key;
+    final paccakhanTime = selectedPaccakhan.value;
+
+    final notificationTime = paccakhanTime.subtract(
+      const Duration(minutes: 15),
+    );
+
+    print('==========================================');
+    print('✅ SELECTED PACCakHAN');
+    print('Paccakhan Name : $paccakhanName');
+    print('Paccakhan Time : $paccakhanTime');
+    print('Notification At: $notificationTime');
+    print('Current Time   : $now');
+    print('==========================================');
+
+    try {
+      await NotificationService.schedulePaccakhanNotification(
+        paccakhanName: paccakhanName,
+        paccakhanTime: paccakhanTime,
+      );
+
+      print('==========================================');
+      print('✅ NOTIFICATION SCHEDULED');
+      print('Paccakhan : $paccakhanName');
+      print('At        : $notificationTime');
+      print('==========================================');
+    } catch (e, stackTrace) {
+      print('❌ Notification scheduling error: $e');
+      print(stackTrace);
     }
   }
 
@@ -227,7 +276,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final dayColor = _getDayColor(goodBadDay);
 
-    if (_firebaseLatitude == null || _firebaseLongitude == null) {
+    if (_isFirebaseLoading ||
+        _firebaseLatitude == null ||
+        _firebaseLongitude == null) {
       return Scaffold(
         appBar: AppBar(
           title: const Text(
@@ -255,16 +306,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final solarResult = PaccakhanTimeUtils.calculateSunriseSunset(
       date: today,
-
       latitude: _firebaseLatitude!,
-
       longitude: _firebaseLongitude!,
-
       timeZone: timeZone,
     );
 
     final sunrise = solarResult['sunrise']!;
-
     final sunset = solarResult['sunset']!;
 
     final dayLength = PaccakhanTimeUtils.calculateDayLength(sunrise, sunset);
@@ -300,12 +347,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     print('------------------------------------------');
-    print('Today Date       : $todayString');
-    print('Firestore Tithi  : $tithiName');
-    print('Firestore ID     : $idString');
-    print('Firebase Latitude: $_firebaseLatitude');
+    print('Today Date        : $todayString');
+    print('Firestore Tithi   : $tithiName');
+    print('Firestore ID      : $idString');
+    print('Firebase Latitude : $_firebaseLatitude');
     print('Firebase Longitude: $_firebaseLongitude');
-    print('Calculated Day   : $goodBadDay');
+    print('Calculated Day    : $goodBadDay');
+    print('Coming Paccakhan  : $comingPaccakhan');
+    print('------------------------------------------');
 
     return Scaffold(
       appBar: AppBar(
@@ -326,58 +375,44 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(8),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-
           children: [
             Card(
               elevation: 3,
               color: dayColor,
-
               child: Container(
                 width: double.infinity,
-
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 10,
                 ),
-
                 child: Column(
                   children: [
                     const Text(
                       "Today's Paccakhan",
-
                       style: TextStyle(
                         fontSize: 22,
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     const SizedBox(height: 10),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-
                       children: [
                         Text(
                           _formatDisplayDate(today),
-
                           style: const TextStyle(
                             fontSize: 18,
                             color: Colors.white,
                           ),
                         ),
-
                         const SizedBox(width: 8),
-
                         Text(
                           _getDayName(today),
-
                           style: const TextStyle(
                             fontSize: 18,
                             color: Colors.white,
@@ -385,28 +420,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 10),
-
-                    _isFirebaseLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                            tithiName,
-
-                            style: const TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-
+                    Text(
+                      tithiName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                     const SizedBox(height: 5),
                   ],
                 ),
@@ -424,9 +446,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: Icons.wb_sunny,
                   ),
                 ),
-
                 const SizedBox(width: 10),
-
                 Expanded(
                   child: _timeCard(
                     title: 'Sunset',
@@ -441,7 +461,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const Text(
               'Paccakhan Timings',
-
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
 
@@ -490,13 +509,10 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (dayType?.trim().toLowerCase()) {
       case 'good day':
         return Colors.green;
-
       case 'bad day':
         return Colors.red;
-
       case 'normal day':
         return Colors.blue;
-
       default:
         return Colors.grey;
     }
@@ -538,25 +554,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-
       decoration: BoxDecoration(
         color: Colors.orangeAccent,
         borderRadius: BorderRadius.circular(12),
       ),
-
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-
             children: [
               Icon(icon, size: 18),
-
               const SizedBox(width: 5),
-
               Text(
                 title,
-
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -564,12 +574,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 12),
-
           Text(
             time,
-
             style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
           ),
         ],
@@ -580,24 +587,18 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _paccakhanTile(String name, String time, bool isComing) {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
-
       color: isComing ? Colors.orangeAccent : null,
-
       child: ListTile(
         leading: Icon(Icons.access_time, color: isComing ? Colors.white : null),
-
         title: Text(
           name,
-
           style: TextStyle(
             fontWeight: FontWeight.w600,
             color: isComing ? Colors.white : null,
           ),
         ),
-
         trailing: Text(
           time,
-
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -649,7 +650,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _formatDuration(Duration duration) {
     final hours = duration.inHours;
-
     final minutes = duration.inMinutes.remainder(60);
 
     return '$hours hr $minutes min';

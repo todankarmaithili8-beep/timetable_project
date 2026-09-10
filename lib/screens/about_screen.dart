@@ -6,13 +6,20 @@ class AboutScreen extends StatelessWidget {
 
   Future<void> _openPrivacyPolicy() async {
     final Uri url = Uri.parse(
-      'http://www.gadreinfotech.com/mobile-app-privacy/',
+      'https://www.gadreinfotech.com/mobile-app-privacy/',
     );
 
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
-      throw 'Could not open Privacy Policy URL';
+    try {
+      final bool launched = await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched) {
+        throw Exception('Could not open Privacy Policy');
+      }
+    } catch (e) {
+      debugPrint('Privacy Policy Error: $e');
     }
   }
 
@@ -33,7 +40,7 @@ class AboutScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            const SizedBox(height: 15),
+            const SizedBox(height: 2),
 
             // GADRE INFOTECH LOGO
             Image.asset(
@@ -43,7 +50,7 @@ class AboutScreen extends StatelessWidget {
               fit: BoxFit.contain,
             ),
 
-            const SizedBox(height: 15),
+            const SizedBox(height: 5),
 
             // APP NAME
             const Text(
@@ -52,7 +59,7 @@ class AboutScreen extends StatelessWidget {
               style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 5),
 
             // APP DESCRIPTION
             const Text(
@@ -61,11 +68,11 @@ class AboutScreen extends StatelessWidget {
               style: TextStyle(fontSize: 15, color: Colors.black54),
             ),
 
-            const SizedBox(height: 25),
+            const SizedBox(height: 5),
 
             const Divider(),
 
-            const SizedBox(height: 15),
+            const SizedBox(height: 5),
 
             Row(
               children: [
@@ -91,7 +98,7 @@ class AboutScreen extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 22),
+            const SizedBox(height: 5),
 
             Row(
               children: [
@@ -117,7 +124,7 @@ class AboutScreen extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 25),
+            const SizedBox(height: 5),
 
             const Divider(),
 
